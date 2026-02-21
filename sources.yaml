@@ -1,0 +1,322 @@
+# Immigration & Labor Data Sources Configuration
+# Edit this file to customize which datasets to fetch and how to fetch them
+
+sources:
+  # ========== DOL/OFLC LCA Data ==========
+  - name: "H-1B LCA Disclosure Data"
+    group: "LCA"
+    cadence: "quarterly"
+    method: "lca_disclosure_data"
+    page_url: "https://www.dol.gov/agencies/eta/foreign-labor/performance"
+    filetype: "xlsx"
+    selector: "a[href]"
+    notes: "LCA disclosure data files and record layouts from Historical Case Disclosure Data section (organized by fiscal year)"
+
+  # ========== DOL/OFLC PERM Data ==========
+  - name: "PERM Disclosure Data"
+    group: "PERM"
+    cadence: "quarterly"
+    method: "perm_disclosure_data"
+    page_url: "https://www.dol.gov/agencies/eta/foreign-labor/performance"
+    filetype: "xlsx"
+    selector: "a[href]"
+    notes: "PERM disclosure data files and record layouts from PERM Program section (organized by fiscal year)"
+    filetype: "xlsx"
+    selector: "a[href*='.xlsx'], a[href*='.xls'], a[href*='.csv']"
+    pattern: "PERM"
+    notes: "Fetch latest fiscal year quarters from Disclosure Data section"
+
+  # ========== USCIS Employment-Based Immigration Data ==========
+  - name: "USCIS Employment-Based Immigration Data"
+    group: "USCIS_IMMIGRATION"
+    cadence: "quarterly"
+    method: "uscis_employment_data"
+    page_url: "https://www.uscis.gov/tools/reports-and-studies/immigration-and-citizenship-data?topic_id%5B0%5D=33682&topic_id%5B1%5D=33599&topic_id%5B2%5D=33631&topic_id%5B3%5D=33674&topic_id%5B4%5D=33737&topic_id%5B5%5D=33628&topic_id%5B6%5D=33614&topic_id%5B7%5D=33685&topic_id%5B8%5D=33615&topic_id%5B9%5D=33686&topic_id%5B10%5D=33687&topic_id%5B11%5D=33690&topic_id%5B12%5D=33691&topic_id%5B13%5D=33701&ddt_mon=&ddt_yr=&query=&items_per_page=100"
+    filetype: "xlsx"
+    selector: "a[href]"
+    notes: "Employment-based immigration forms with FULL pagination: I-140, I-485, I-765, I-360, I-526/I-526E, and EB inventory files. Historical coverage: 1991-present across 7 pages. Organized by year."
+
+  # ========== USCIS Processing Times (Skipped - HTML only) ==========
+  # Processing times are HTML-only interactive tools, skipping
+  # User can manually export if needed
+
+  # ========== Visa Bulletin ==========
+  - name: "Visa Bulletin PDFs (Monthly)"
+    group: "Visa_Bulletin"
+    cadence: "monthly"
+    method: "visa_bulletin_multilevel"
+    page_url: "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html"
+    filetype: "pdf"
+    selector: "a[href]"
+    regex_filters:
+      - "(?i)visabulletin_[A-Za-z]+\\d{4}\\.pdf"
+    notes: "Traverse hub -> fiscal year -> monthly page, then download only the printer‑friendly PDF."
+
+  # ========== Visa Issuance Statistics ==========
+  - name: "Monthly Immigrant Visa Issuances"
+    group: "Visa_Statistics"
+    cadence: "monthly"
+    method: "visa_statistics_monthly"
+    page_url: "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics/monthly-immigrant-visa-issuances.html"
+    filetype: "xlsx"
+    selector: "a[href*='.xls'], a[href*='.pdf']"
+    notes: "Monthly IV issuance tables (March 2017 - May 2025, organized by year)"
+
+  # ========== Annual Reports ==========
+  - name: "Annual Visa Reports (All Tables)"
+    group: "Visa_Annual_Reports"
+    cadence: "annual"
+    method: "visa_annual_reports"
+    page_url: "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/annual-reports.html"
+    filetype: "pdf"
+    selector: "a[href]"
+    regex_filters:
+      - "(?i)Table.*\\.pdf"
+    notes: "Annual reports 2015-2024 with all statistical tables (immigrant + nonimmigrant)"
+
+  # ========== Nonimmigrant Visa Statistics ==========
+  - name: "NIV Workload by Visa Category (Issuance & Refusal)"
+    group: "NIV_Statistics/Workload"
+    cadence: "annual"
+    method: "scrape_if_available"
+    page_url: "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/nonimmigrant-visa-statistics.html"
+    filetype: "pdf"
+    selector: "a[href*='NIVWorkload']"
+    notes: "Nonimmigrant visa workload reports (worldwide issuance and refusal data by category)"
+
+  - name: "NIV Detail Tables & Multi-Year Reports"
+    group: "NIV_Statistics/Detail_Tables"
+    cadence: "annual"
+    method: "scrape_if_available"
+    page_url: "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/nonimmigrant-visa-statistics.html"
+    filetype: "pdf"
+    selector: "a[href*='NIVDetail'], a[href*='FY'][href*='Detail'], a[href*='AnnualReport'][href*='XVI']"
+    notes: "Yearly NIV detail tables and multi-year summary reports (5-year ranges)"
+
+
+  # ========== DHS Yearbook ==========
+  - name: "DHS Yearbook of Immigration Statistics"
+    group: "DHS_Yearbook"
+    cadence: "annual"
+    method: "scrape_if_available"
+    page_url: "https://ohss.dhs.gov/topics/immigration/yearbook/2024"
+    filetype: "xlsx"
+    selector: "a[href*='.xls'], a[href*='.pdf']"
+    notes: "Annual yearbook - may be released table-by-table"
+
+  # ========== TRAC Immigration (Auth Required) ==========
+  - name: "TRAC Immigration Data"
+    group: "TRAC"
+    cadence: "varies"
+    method: "manual_or_auth"
+    page_url: "https://trac.syr.edu"
+    filetype: "n/a"
+    notes: "Requires authentication/subscription - skip automated download"
+
+  # ========== BLS API ==========
+  - name: "BLS Employment & Wage Data"
+    group: "BLS"
+    cadence: "monthly"
+    method: "api"
+    api_endpoint: "https://api.bls.gov/publicAPI/v2/timeseries/data/"
+    filetype: "json"
+    # Edit these series IDs as needed - examples below:
+    # CES0000000001 = Total Nonfarm Employment (Seasonally Adjusted)
+    # CES0500000003 = Total Private Average Hourly Earnings (Seasonally Adjusted)
+    # CEU0800000003 = Financial Activities Average Hourly Earnings (Not Seasonally Adjusted)
+    bls_series_ids:
+      - "CES0000000001"  # Total Nonfarm Employment
+      - "CES0500000003"  # Total Private Avg Hourly Earnings
+    notes: "Set BLS_API_KEY env var for higher quota (optional)"
+
+  # ========== Census ACS API ==========
+  - name: "ACS 1-Year Immigrant Demographics"
+    group: "ACS"
+    cadence: "annual"
+    method: "api"
+    api_endpoint: "https://api.census.gov/data/2024/acs/acs1"
+    filetype: "json"
+    # Edit these variables as needed:
+    # B01001_001E = Total Population
+    # B05002_001E = Nativity Total
+    # B05002_013E = Foreign Born
+    # Add more from: https://api.census.gov/data/2024/acs/acs1/variables.html
+    acs_variables:
+      - "B01001_001E"  # Total Population
+      - "B05002_001E"  # Nativity Total
+      - "B05002_013E"  # Foreign Born
+    acs_geography: "state:*"
+    notes: "Set CENSUS_API_KEY env var for higher quota (optional)"
+
+  # ========== WARN Layoff Notices (Multi-State) ==========
+  # California - Direct file download
+  - name: "California WARN Notices"
+    group: "WARN"
+    state: "CA"
+    cadence: "continuously_updated"
+    method: "direct_file"
+    url: "https://edd.ca.gov/siteassets/files/Jobs_and_Training/warn/WARN_Report.xlsx"
+    filetype: "xlsx"
+    notes: "Full dataset - requires date filtering downstream"
+
+  # Texas - Monthly reports
+  - name: "Texas WARN Notices"
+    group: "WARN"
+    state: "TX"
+    cadence: "monthly"
+    method: "scrape"
+    page_url: "https://www.twc.texas.gov/businesses/worker-adjustment-and-retraining-notification-warn-notices"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    pattern: "warn"
+    notes: "Monthly WARN notices"
+
+  # Florida - Current year
+  - name: "Florida WARN Notices 2026"
+    group: "WARN"
+    state: "FL"
+    cadence: "monthly"
+    method: "scrape"
+    page_url: "https://floridajobs.org/rebuilding-florida/business-recovery/reemployment-and-emergency-assistance-coordination/rapid-response-services-and-warn/warn-notices/warn-notices-2026"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    notes: "2026 WARN notices"
+
+  # Florida - Previous year (for 12-month window)
+  - name: "Florida WARN Notices 2025"
+    group: "WARN"
+    state: "FL"
+    cadence: "monthly"
+    method: "scrape"
+    page_url: "https://floridajobs.org/rebuilding-florida/business-recovery/reemployment-and-emergency-assistance-coordination/rapid-response-services-and-warn/warn-notices/warn-notices-2025"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    notes: "2025 WARN notices for rolling 12-month window"
+
+  # New York
+  - name: "New York WARN Notices"
+    group: "WARN"
+    state: "NY"
+    cadence: "continuously_updated"
+    method: "scrape"
+    page_url: "https://dol.ny.gov/warn-notices"
+    selector: "a[href*='.pdf'], a[href*='.xls'], a[href*='.csv']"
+    notes: "NY WARN database"
+
+  # New Jersey
+  - name: "New Jersey WARN Notices"
+    group: "WARN"
+    state: "NJ"
+    cadence: "monthly"
+    method: "scrape"
+    page_url: "https://www.nj.gov/labor/employer-services/warn/"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    notes: "NJ WARN listings"
+
+  # Washington
+  - name: "Washington WARN Notices"
+    group: "WARN"
+    state: "WA"
+    cadence: "continuously_updated"
+    method: "scrape"
+    page_url: "https://esd.wa.gov/about-employees/WARN"
+    selector: "a[href*='.pdf'], a[href*='.xls'], a[href*='.csv']"
+    notes: "WA WARN notices"
+
+  # Ohio
+  - name: "Ohio WARN Notices"
+    group: "WARN"
+    state: "OH"
+    cadence: "continuously_updated"
+    method: "scrape"
+    page_url: "https://jfs.ohio.gov/warn/index.stm"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    notes: "OH WARN database"
+
+  # Massachusetts
+  - name: "Massachusetts WARN Notices"
+    group: "WARN"
+    state: "MA"
+    cadence: "continuously_updated"
+    method: "scrape"
+    page_url: "https://www.mass.gov/info-details/worker-adjustment-and-retraining-notification-warn"
+    selector: "a[href*='.pdf'], a[href*='.xls'], a[href*='.csv']"
+    notes: "MA WARN reports"
+
+  # Michigan
+  - name: "Michigan WARN Notices"
+    group: "WARN"
+    state: "MI"
+    cadence: "continuously_updated"
+    method: "scrape"
+    page_url: "https://www.michigan.gov/leo/bureaus-agencies/wd/warn"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    notes: "MI WARN listings"
+
+  # Illinois
+  - name: "Illinois WARN Notices"
+    group: "WARN"
+    state: "IL"
+    cadence: "monthly"
+    method: "scrape"
+    page_url: "https://dceo.illinois.gov/workforcedevelopment/warn.html"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    pattern: "warn"
+    notes: "IL monthly WARN reports"
+
+  # Tennessee
+  - name: "Tennessee WARN Notices"
+    group: "WARN"
+    state: "TN"
+    cadence: "continuously_updated"
+    method: "scrape"
+    page_url: "https://www.tn.gov/workforce/general-resources/major-publications0/major-publications-redirect/warn.html"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    notes: "TN WARN notices"
+
+  # Indiana
+  - name: "Indiana WARN Notices"
+    group: "WARN"
+    state: "IN"
+    cadence: "continuously_updated"
+    method: "scrape"
+    page_url: "https://www.in.gov/dwd/warn-notifications/"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    notes: "IN WARN notifications"
+
+  # North Carolina
+  - name: "North Carolina WARN Notices"
+    group: "WARN"
+    state: "NC"
+    cadence: "monthly"
+    method: "scrape"
+    page_url: "https://www.nccommerce.com/jobs-training/employer-services/warn-reports"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    notes: "NC WARN reports"
+
+  # Arizona
+  - name: "Arizona WARN Notices"
+    group: "WARN"
+    state: "AZ"
+    cadence: "continuously_updated"
+    method: "scrape"
+    page_url: "https://www.azdes.gov/warn"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    notes: "AZ WARN database"
+
+  # Pennsylvania
+  - name: "Pennsylvania WARN Notices"
+    group: "WARN"
+    state: "PA"
+    cadence: "monthly"
+    method: "scrape"
+    page_url: "https://www.dli.pa.gov/Businesses/Workforce-Development/warn/Pages/default.aspx"
+    selector: "a[href*='.pdf'], a[href*='.xls']"
+    notes: "PA WARN notices"
+
+  # Georgia
+  - name: "Georgia WARN Notices"
+    group: "WARN"
+    state: "GA"
+    cadence: "continuously_updated"
+    method: "scrape"
+    page_url: "https://dol.georgia.gov/warn-notices"
+    selector: "a[href*='.pdf'], a[href*='.xls'], a[href*='.csv']"
+    notes: "GA WARN listings"

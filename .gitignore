@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Downloaded data (too large for git)
+downloads/
+exports/
+
+# Logs
+*.log
+fetch_log.txt
+/tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files (temporary)
+test_*.py
+check_*.py
+
+# Backup files
+*.bak
+*.backup
