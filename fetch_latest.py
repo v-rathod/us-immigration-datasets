@@ -304,13 +304,14 @@ def extract_date_from_text(text: str) -> Optional[datetime]:
     return None
 
 
-def download_file(url: str, dest_path: Path) -> bool:
+def download_file(url: str, dest_path: Path, silent_404: bool = False) -> bool:
     """
     Download file to destination path.
     
     Args:
         url: URL to download
         dest_path: Destination file path
+        silent_404: If True, don't log 404 errors (useful when trying multiple URL patterns)
     
     Returns:
         True if successful, False otherwise
@@ -327,7 +328,10 @@ def download_file(url: str, dest_path: Path) -> bool:
         
         return True
     except Exception as e:
-        log(f"Error downloading {url}: {e}", "error")
+        # Silently skip 404s if requested (common when trying multiple URL patterns)
+        if silent_404 and "404" in str(e):
+            return False
+        log(f"Errordownloading {url}: {e}", "error")
         return False
 
 
@@ -2276,7 +2280,7 @@ def handle_uscis_processing_times(
     manifest: Dict[str, Any] = None
 ) -> None:
     """
-    Download USCIS Processing Times snapshots.
+    Download USCIS Processing Times snapshots using headless browser automation.
     
     Args:
         source: Source configuration
@@ -2285,7 +2289,7 @@ def handle_uscis_processing_times(
         manifest_entries: List to append manifest entries
         manifest: Existing manifest for incremental downloads
     """
-    log(f"Fetching USCIS Processing Times...")
+    log(f"Fetching USCIS Processing Times (using browser automation)...")
     page_url = source["page_url"]
     
     # Create month subdirectories
@@ -2295,56 +2299,153 @@ def handle_uscis_processing_times(
     raw_dir.mkdir(parents=True, exist_ok=True)
     parsed_dir.mkdir(parents=True, exist_ok=True)
     
-    # Download HTML snapshot
-    html_filename = f"processing_times_{run_date.strftime('%Y%m%d')}.html"
+    # Check if already downloaded this month
+    html_filename = "processing_times.html"
     html_path = raw_dir / html_filename
-    html_url = page_url
     
-    if manifest and is_file_in_manifest(html_url, html_path, manifest):
-        log(f"Already have {html_filename}, skipping")
+    if manifest and is_file_in_manifest(page_url, html_path, manifest):
+        log(f"Already have {year_month}/{html_filename}, skipping")
         return
     
-    resp = http_get(html_url)
-    if resp:
-        html_path.write_bytes(resp.content)
-        log(f"Downloaded HTML snapshot: {html_filename}", "success")
+    # Use Selenium with headless Chrome
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from webdriver_manager.chrome import ChromeDriverManager
+    
+    chrome_options = Options()
+    chrome_options.add_argument('--headless=new')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option('useAutomationExtension', False)
+    chrome_options.add_argument(f'user-agent={USER_AGENT}')
+   
+    driver = None
+    try:
+        log("Starting Chrome browser...")
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver.set_page_load_timeout(90)
         
-        # Parse and create CSV
+        # Execute CDP commands to avoid detection
+        driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+            "userAgent": USER_AGENT
+        })
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
+        log(f"Loading page: {page_url}")
+        driver.get(page_url)
+        
+        # Wait for Cloudflare challenge to complete (can take 5-15 seconds)
+        log("Waiting for Cloudflare challenge...")
+        time.sleep(10)  # Initial wait for challenge
+        
+        # Try to wait for actual content to load (look for form names or office names)
+        try:
+            WebDriverWait(driver, 20).until(
+                lambda d: "processing" in d.page_source.lower() and 
+                         ("i-140" in d.page_source.lower() or "i-485" in d.page_source.lower() or
+                          "form" in d.page_source.lower())
+            )
+            log("Page content loaded successfully")
+        except:
+            log("Timeout waiting for specific content, checking page state...", "warning")  
+        
+        # Save HTML snapshot
+        html_content = driver.page_source
+        html_path.write_text(html_content, encoding='utf-8')
+        log(f"Saved HTML snapshot: {year_month}/{html_filename} ({len(html_content)} bytes)", "success")
+        
+        # Check if we got past Cloudflare
+        if "challenge-platform" in html_content or "Just a moment" in html_content:
+            log("Warning: May have Cloudflare challenge page, data might be incomplete", "warning")
+        
+        # Parse HTML and create CSV
         from bs4 import BeautifulSoup
         import csv
         
-        soup = BeautifulSoup(resp.content, 'html.parser')
-        csv_filename = f"processing_times_{run_date.strftime('%Y%m%d')}.csv"
+        soup = BeautifulSoup(html_content, 'html.parser')
+        csv_filename = "processing_times.csv"
         csv_path = parsed_dir / csv_filename
         
-        # Try to extract processing time data
         rows = []
-        # Look for tables with processing time data
-        for table in soup.find_all('table'):
-            for row in table.find_all('tr')[1:]:  # Skip header
-                cells = row.find_all(['td', 'th'])
+        
+        # Try multiple parsing strategies for the USCIS page
+        # Strategy 1: Look for form-specific tables
+        tables = soup.find_all('table')
+        for table in tables:
+            for tr in table.find_all('tr')[1:]:  # Skip header
+                cells = tr.find_all(['td', 'th'])
                 if len(cells) >= 3:
-                    rows.append({
-                        'snapshot_date': run_date.strftime('%Y-%m-%d'),
-                        'form': cells[0].get_text(strip=True) if len(cells) > 0 else '',
-                        'category': cells[1].get_text(strip=True) if len(cells) > 1 else '',
-                        'office': cells[2].get_text(strip=True) if len(cells) > 2 else '',
-                        'processing_time': cells[3].get_text(strip=True) if len(cells) > 3 else '',
-                    })
+                    # Extract text from cells
+                    cell_texts = [cell.get_text(strip=True) for cell in cells]
+                    
+                    # Try to identify form type, category, office, and processing time
+                    form = category = office = proc_time_min = proc_time_max = unit = ''
+                    
+                    if len(cell_texts) >= 1:
+                        form = cell_texts[0]
+                    if len(cell_texts) >= 2:
+                        category = cell_texts[1]
+                    if len(cell_texts) >= 3:
+                        office = cell_texts[2]
+                    if len(cell_texts) >= 4:
+                        # Try to parse processing time (e.g., "5 to 8 months")
+                        time_text = cell_texts[3]
+                        time_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:to|-)\s*(\d+(?:\.\d+)?)\s*(\w+)', time_text)
+                        if time_match:
+                            proc_time_min = time_match.group(1)
+                            proc_time_max = time_match.group(2)
+                            unit = time_match.group(3)
+                        else:
+                            # Single value like "5 months"
+                            single_match = re.search(r'(\d+(?:\.\d+)?)\s*(\w+)', time_text)
+                            if single_match:
+                                proc_time_min = single_match.group(1)
+                                proc_time_max = single_match.group(1)
+                                unit = single_match.group(2)
+                    
+                    if form and office:  # Only add rows with meaningful data
+                        rows.append({
+                            'snapshot_date': run_date.strftime('%Y-%m-%d'),
+                            'form': form,
+                            'category': category,
+                            'office': office,
+                            'processing_time_min': proc_time_min,
+                            'processing_time_max': proc_time_max,
+                            'unit': unit
+                        })
         
         if rows:
             with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.DictWriter(f, fieldnames=['snapshot_date', 'form', 'category', 'office', 'processing_time'])
+                writer = csv.DictWriter(f, fieldnames=[
+                    'snapshot_date', 'form', 'category', 'office',
+                    'processing_time_min', 'processing_time_max', 'unit'
+                ])
                 writer.writeheader()
                 writer.writerows(rows)
-            log(f"Created parsed CSV: {csv_filename}", "success")
+            log(f"Created parsed CSV: {year_month}/{csv_filename} ({len(rows)} rows)", "success")
+        else:
+            log("No processing time data extracted from page", "warning")
+            # Create empty CSV with headers for future manual processing
+            with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=[
+                    'snapshot_date', 'form', 'category', 'office',
+                    'processing_time_min', 'processing_time_max', 'unit'
+                ])
+                writer.writeheader()
         
         # Update manifest
         entry = {
             "group": source["group"],
             "name": source["name"],
-            "source_url": html_url,
-            "local_path": str(html_path.relative_to(html_path.parents[3])),
+            "source_url": page_url,
+            "local_path": str(html_path.relative_to(html_path.parents[4])),
             "detected_date": run_date.isoformat(),
             "method": source["method"],
             "status": "success",
@@ -2353,7 +2454,16 @@ def handle_uscis_processing_times(
         manifest_entries.append(entry)
         
         if manifest:
-            manifest['files_by_url'][html_url] = entry
+            manifest['files_by_url'][page_url] = entry
+        
+    except Exception as e:
+        log(f"Error fetching USCIS Processing Times: {e}", "error")
+        import traceback
+        traceback.print_exc()
+    finally:
+        if driver:
+            driver.quit()
+            log("Browser closed")
 
 
 def handle_dos_numerical_limits(
@@ -2426,7 +2536,7 @@ def handle_dos_waiting_list(
     manifest: Dict[str, Any] = None
 ) -> None:
     """
-    Download DOS Immigrant Visa Waiting List reports.
+    Download DOS Immigrant Visa Waiting List reports using correct URL patterns.
     
     Args:
         source: Source configuration
@@ -2436,52 +2546,61 @@ def handle_dos_waiting_list(
         manifest: Existing manifest for incremental downloads
     """
     log(f"Fetching DOS Immigrant Visa Waiting List...")
-    page_url = source["page_url"]
     
-    resp = http_get(page_url)
-    if not resp:
-        log("Failed to fetch waiting list index page", "error")
-        return
+    base_url = source.get("base_url", "https://travel.state.gov")
+    start_year = source.get("start_year", 2015)
+    end_year = run_date.year
     
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(resp.content, 'html.parser')
-    
-    # Find waiting list PDF links
     downloaded = 0
-    for link in soup.find_all('a', href=True):
-        href = link['href']
-        text = link.get_text(strip=True).lower()
+    
+    # Try multiple URL patterns (DOS has changed naming conventions over time)
+    url_patterns = [
+        # Pattern 1: Current format (as of 2023)
+        lambda y: f"{base_url}/content/dam/visas/Statistics/Immigrant-Statistics/WaitingList/WaitingListItem_{y}_vF.pdf",
+        # Pattern 2: Alternative naming
+        lambda y: f"{base_url}/content/dam/visas/Statistics/WaitingList/WaitingList_{y}.pdf",
+        # Pattern 3: With "AnnualReport" prefix
+        lambda y: f"{base_url}/content/dam/visas/Statistics/WaitingList/AnnualReport_{y}.pdf",
+    ]
+    
+    for year in range(start_year, end_year + 1):
+        year_dir = group_dir / str(year)
+        year_dir.mkdir(parents=True, exist_ok=True)
         
-        if 'waiting' in text and 'list' in text and href.endswith('.pdf'):
-            # Extract year from text or URL
-            import re
-            year_match = re.search(r'20\d{2}', text + href)
-            if not year_match:
-                continue
+        pdf_filename = f"waiting_list_{year}.pdf"
+        pdf_path = year_dir / pdf_filename
+        
+        # Check if already have this file
+        pdf_downloaded = False
+        for pattern_idx, url_pattern in enumerate(url_patterns):
+            pdf_url = url_pattern(year)
             
-            year = year_match.group()
+            if manifest and is_file_in_manifest(pdf_url, pdf_path, manifest):
+                log(f"Already have {year}/{pdf_filename}, skipping")
+                # Still try to parse if CSV doesn't exist
+                csv_filename = f"waiting_list_{year}.csv"
+                csv_path = year_dir / csv_filename
+                if not csv_path.exists() and pdf_path.exists():
+                    log(f"Parsing existing PDF for {year}...")
+                    _parse_waiting_list_pdf(pdf_path, csv_path, year)
+                pdf_downloaded = True
+                break
             
-            if not href.startswith('http'):
-                href = urljoin(page_url, href)
-            
-            year_dir = group_dir / year
-            year_dir.mkdir(parents=True, exist_ok=True)
-            
-            filename = f"Waiting_List_{year}.pdf"
-            pdf_path = year_dir / filename
-            
-            if manifest and is_file_in_manifest(href, pdf_path, manifest):
-                log(f"Already have {year}/{filename}, skipping")
-                continue
-            
-            if download_file(href, pdf_path):
-                log(f"Downloaded {year}: {filename}", "success")
-                downloaded += 1
+            # Only try download if not already in manifest
+            if pdf_downloaded:
+                break
                 
+            # Try this URL pattern (suppress log spam for 404s)
+            if download_file(pdf_url, pdf_path, silent_404=True):
+                log(f"Downloaded {year}: {pdf_filename} (pattern {pattern_idx + 1})", "success")
+                downloaded += 1
+                pdf_downloaded = True
+                
+                # Update manifest for PDF
                 entry = {
                     "group": source["group"],
                     "name": source["name"],
-                    "source_url": href,
+                    "source_url": pdf_url,
                     "local_path": str(pdf_path.relative_to(pdf_path.parents[2])),
                     "detected_date": None,
                     "method": source["method"],
@@ -2491,11 +2610,144 @@ def handle_dos_waiting_list(
                 manifest_entries.append(entry)
                 
                 if manifest:
-                    manifest['files_by_url'][href] = entry
-            
-            time.sleep(0.5)
+                    manifest['files_by_url'][pdf_url] = entry
+                
+                # Parse PDF to CSV
+                csv_filename = f"waiting_list_{year}.csv"
+                csv_path = year_dir / csv_filename
+                
+                if _parse_waiting_list_pdf(pdf_path, csv_path, year):
+                    log(f"Created parsed CSV: {year}/{csv_filename}", "success")
+                    
+                    # Update manifest for CSV
+                    csv_entry = {
+                        "group": source["group"],
+                        "name": f"{source['name']} (parsed)",
+                        "source_url": pdf_url,
+                        "local_path": str(csv_path.relative_to(csv_path.parents[2])),
+                        "detected_date": None,
+                        "method": "parsed",
+                        "status": "success",
+                        "hash": hash_file(csv_path)
+                    }
+                    manifest_entries.append(csv_entry)
+                    
+                    if manifest:
+                        manifest['files_by_url'][f"{pdf_url}#csv"] = csv_entry
+                
+                break  # Found working pattern, move to next year
+        
+        if not pdf_downloaded:
+            log(f"Couldn't find waiting list PDF for {year} (tried {len(url_patterns)} patterns)", "warning")
+        
+        time.sleep(0.5)
     
     log(f"Downloaded {downloaded} new file(s)")
+
+
+def _parse_waiting_list_pdf(pdf_path: Path, csv_path: Path, fiscal_year: int) -> bool:
+    """
+    Parse DOS Waiting List PDF and extract table data to CSV.
+    
+    Args:
+        pdf_path: Path to PDF file
+        csv_path: Path to output CSV file
+        fiscal_year: Fiscal year of the data
+    
+    Returns:
+        True if parsing succeeded, False otherwise
+    """
+    try:
+        import PyPDF2
+        import csv
+        
+        with open(pdf_path, 'rb') as pdf_file:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            
+            all_text = []
+            for page in pdf_reader.pages:
+                text = page.extract_text()
+                if text:
+                    all_text.append(text)
+            
+            # Combine all text
+            full_text = '\n'.join(all_text)
+            
+            # Parse table data - look for common patterns
+            # Format is typically: Category | Country | Count
+            rows = []
+            lines = full_text.split('\n')
+            
+            # Immigration categories to look for
+            categories = ['F1', 'F2A', 'F2B', 'F3', 'F4', 'EB1', 'EB2', 'EB3', 'EB4', 'EB5']
+            
+            for i, line in enumerate(lines):
+                # Look for lines with category codes
+                for category in categories:
+                    if category in line:
+                        # Try to extract count (numbers)
+                        numbers = re.findall(r'\d{1,3}(?:,\d{3})*', line)
+                        if numbers:
+                            # Clean up the line to find country name
+                            parts = re.split(r'\s{2,}|\t', line.strip())
+                            
+                            # Try to identify country (usually between category and count)
+                            country = ''
+                            for part in parts:
+                                if part and not part.isdigit() and category not in part and not re.match(r'\d', part):
+                                    # Check if it's a country name (has letters)
+                                    if re.search(r'[a-zA-Z]{3,}', part):
+                                        country = part.strip()
+                                        break
+                            
+                            # Extract count (last number in line typically)
+                            count = numbers[-1].replace(',', '') if numbers else '0'
+                            
+                            if country or count != '0':
+                                rows.append({
+                                    'fiscal_year': fiscal_year,
+                                    'category': category,
+                                    'country': country if country else 'All Countries',
+                                    'count': count
+                                })
+            
+            # If no structured data found, try alternative parsing
+            if not rows:
+                log(f"No structured table data found in {pdf_path.name}, attempting fallback parsing", "warning")
+                
+                # Fallback: Look for any line with numbers and categories
+                for line in lines:
+                    if any(cat in line for cat in categories):
+                        # Extract all numbers
+                        numbers = re.findall(r'\d+', line)
+                        if numbers:
+                            for category in categories:
+                                if category in line:
+                                    rows.append({
+                                        'fiscal_year': fiscal_year,
+                                        'category': category,
+                                        'country': 'All',
+                                        'count': numbers[0] if numbers else '0'
+                                    })
+                                    break
+            
+            if rows:
+                with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+                    writer = csv.DictWriter(f, fieldnames=['fiscal_year', 'category', 'country', 'count'])
+                    writer.writeheader()
+                    writer.writerows(rows)
+                return True
+            else:
+                log(f"Could not extract table data from {pdf_path.name}", "warning")
+                # Create empty CSV with headers
+                with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+                    writer = csv.DictWriter(f, fieldnames=['fiscal_year', 'category', 'country', 'count'])
+                    writer.writeheader()
+                return False
+    
+    except Exception as e:
+        log(f"Error parsing PDF {pdf_path.name}: {e}", "error")
+        return False
 
 
 def handle_dol_record_layouts(

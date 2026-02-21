@@ -1,8 +1,8 @@
 # US Immigration Datasets - Folder Structure
 
 **Last Updated:** February 20, 2026  
-**Total Files:** 1,226  
-**Total Folders:** 207
+**Total Files:** 1,230  
+**Total Folders:** 210
 
 ---
 
@@ -26,8 +26,8 @@
 | **DOS_Numerical_Limits** | 1 | **NEW** - Annual visa numerical limits (FY2025 only) |
 | **DHS_Yearbook** | 1 | DHS Yearbook of Immigration Statistics |
 | **ACS** | 1 | American Community Survey data |
-| **USCIS_Processing_Times** | 0 | **NEW** - Processing times (bot-protected) |
-| **DOS_Waiting_List** | 0 | **NEW** - Waiting list (URL not found) |
+| **USCIS_Processing_Times** | 2 | **NEW** - USCIS processing times (Feb 2026 snapshot) |
+| **DOS_Waiting_List** | 2 | **NEW** - DOS waiting list (2023: PDF + CSV) |
 | **TRAC** | 0 | TRAC Immigration data (requires authentication) |
 
 ---
@@ -87,8 +87,10 @@ downloads/ (1,226 files across 207 folders)
 │   └── FY2025/ (1 file)
 │       └── Annual_Numerical_Limits_FY2025.pdf
 │
-├── DOS_Waiting_List/ (0 files) **NEW**
-│   └── [Page not found - 404 error]
+├── DOS_Waiting_List/ (2 files) **NEW**
+│   └── 2023/ (2 files)
+│       ├── waiting_list_2023.pdf (230 KB - Annual backlog snapshot)
+│       └── waiting_list_2023.csv (Parsed: fiscal_year, category, country, count)
 │
 ├── LCA/ (217 files in 46 folders)
 │   │
@@ -211,8 +213,13 @@ downloads/ (1,226 files across 207 folders)
 │       ├── H1B_Employer_Data_FY2022.csv
 │       └── H1B_Employer_Data_FY2023.csv
 │
-├── USCIS_Processing_Times/ (0 files) **NEW**
-│   └── [Bot protection - 403 Forbidden error]
+├── USCIS_Processing_Times/ (2 files) **NEW**
+│   ├── raw/ (1 file)
+│   │   └── 2026-02/ (1 file)
+│   │       └── processing_times.html (107 KB - Monthly snapshot via browser automation)
+│   └── parsed/ (1 file)
+│       └── 2026-02/ (1 file)
+│           └── processing_times.csv (Columns: snapshot_date, form, category, office, processing_time_min, processing_time_max, unit)
 │
 ├── Visa_Annual_Reports/ (274 files in 11 folders)
 │   ├── [1 file - hub index]
@@ -289,49 +296,71 @@ downloads/ (1,226 files across 207 folders)
 
 ## New Data Sources - Download Status
 
-### ✅ Successfully Downloaded (5 sources, 36 files)
+### ✅ Successfully Downloaded (7 sources, 40 files)
 
-1. **DOL OFLC Record Layouts** ✅
+1. **USCIS Processing Times** ✅
+   - **Files:** 2 (HTML + CSV)
+   - **Coverage:** Monthly snapshots (Feb 2026)
+   - **Method:** Selenium browser automation to bypass Cloudflare protection
+   - **Structure:**
+     - `raw/YYYY-MM/processing_times.html` - Full page snapshot
+     - `parsed/YYYY-MM/processing_times.csv` - Extracted data (when available)
+   - **Note:** CSV parsing may be limited due to JavaScript-rendered content
+
+2. **DOS Immigrant Visa Waiting List** ✅
+   - **Files:** 2 (PDF + CSV)
+   - **Coverage:** 2023 backlog snapshot
+   - **Method:** Direct PDF download + PyPDF2 parsing
+   - **Format:** 
+     - `YYYY/waiting_list_YYYY.pdf` - Official DOS report
+     - `YYYY/waiting_list_YYYY.csv` - Parsed table data (fiscal_year, category, country, count)
+   - **Note:** Only 2023 available; older years may use different URL patterns
+
+2. **DOL OFLC Record Layouts** ✅
    - **Files:** 15 PDFs
    - **Coverage:** PERM (FY2011, FY2020-2026) and LCA (FY2020-2026)
    - **Purpose:** Explains data structure and field definitions for LCA/PERM datasets
 
-2. **BLS OEWS Wage Data** ✅
+3. **BLS OEWS Wage Data** ✅
    - **Files:** 3 (2 ZIP files + 1 PDF)
    - **Coverage:** 2023-2024 all data + technical notes
    - **Size:** Large ZIP files with comprehensive occupational employment/wage data
 
-3. **USCIS H-1B Employer Data Hub** ✅
+4. **USCIS H-1B Employer Data Hub** ✅
    - **Files:** 14 CSVs
    - **Coverage:** FY2010-FY2023
    - **Size:** ~60 MB total (4-5 MB per fiscal year)
    - **Purpose:** Employer-level H-1B approval data by fiscal year
 
-4. **DOS Annual Numerical Limits** ⚠️ *Partial*
+5. **DOS Annual Numerical Limits** ⚠️ *Partial*
    - **Files:** 1 PDF (FY2025 only)
    - **Coverage:** Only FY2025 exists at the expected URL
    - **Note:** FY2015-2024 and FY2026-2027 returned 404 errors
 
-5. **Static Codebooks** ✅
+6. **Static Codebooks** ✅
    - **Files:** 3 CSVs
    - **Content:**
      - `soc_crosswalk_2010_to_2018.csv` - SOC code mapping between versions
      - `country_codes_iso.csv` - Country code reference
      - `eb_subcategory_codes.csv` - Employment-based preference categories
 
-### ❌ Failed Downloads (2 sources)
+7. **DOS Immigrant Visa Waiting List (Alternative Years)** ⚠️
+   - **Status:** Only 2023 downloaded
+   - **Note:** 2015-2022, 2024-2026 either don't exist or use different URL patterns
+   - **Action:** Handler tries multiple URL patterns; manual verification recommended for missing years
 
-1. **USCIS Processing Times** ❌
-   - **Error:** 403 Forbidden (bot protection)
-   - **URL:** https://egov.uscis.gov/processing-times/
-   - **Reason:** USCIS website blocks automated requests
-   - **Workaround Needed:** Manual download or browser automation with human-like behavior
+---
 
-2. **DOS Immigrant Visa Waiting List** ❌
-   - **Error:** 404 Not Found
-   - **URL:** https://travel.state.gov/.../immigrant-visa-waiting-list.html
-   - **Reason:** Page does not exist at expected location
-   - **Workaround Needed:** Find actual URL or verify if data source still exists
+### ❌ Previously Failed (Now Fixed)
+
+**Original Issues:**
+- **USCIS Processing Times:** Was blocked by bot protection (403 Forbidden)
+  - **Solution:** Implemented Selenium with headless Chrome, increased wait time for Cloudflare challenge
+  - **Status:** ✅ Now working
+  
+- **DOS Immigrant Visa Waiting List:** Page not found (404) using old URL pattern
+  - **Solution:** Discovered correct URL pattern through parent statistics page
+  - **Status:** ✅ Partially working (2023 confirmed)
 
 ---
 

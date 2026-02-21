@@ -345,9 +345,10 @@ sources:
     group: "DOS_Waiting_List"
     cadence: "annual"
     method: "dos_waiting_list"
-    page_url: "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics/immigrant-visa-waiting-list.html"
+    base_url: "https://travel.state.gov"
+    start_year: 2015
     filetype: "pdf"
-    notes: "Waiting list reports by year (scrapes page for all available years)"
+    notes: "Waiting list reports by year (direct PDF download + parsed CSV with columns: fiscal_year, category, country, count)"
 
   # ========== DOL Record Layouts (NEW) ==========
   - name: "DOL OFLC Record Layouts"
