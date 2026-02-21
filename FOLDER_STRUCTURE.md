@@ -1,8 +1,8 @@
 # US Immigration Datasets - Folder Structure
 
 **Last Updated:** February 20, 2026  
-**Total Files:** 1,189  
-**Total Folders:** 162
+**Total Files:** 1,226  
+**Total Folders:** 207
 
 ---
 
@@ -17,10 +17,17 @@
 | **Visa_Bulletin** | 168 | Monthly visa bulletin PDFs (2011-2026) |
 | **PERM** | 47 | Permanent Labor Certification disclosure data (FY2008-2026) |
 | **NIV_Statistics** | 32 | Nonimmigrant visa workload and detail tables |
-| **BLS** | 3 | Bureau of Labor Statistics employment data |
+| **DOL_Record_Layouts** | 15 | **NEW** - PERM/LCA record layout files (FY2020-2026) |
+| **USCIS_H1B_Employer_Hub** | 14 | **NEW** - H-1B employer-level data (FY2010-2023) |
+| **BLS** | 4 | Bureau of Labor Statistics employment data |
+| **Codebooks** | 3 | **NEW** - Static reference CSVs (SOC, countries, EB codes) |
+| **BLS_OEWS** | 3 | **NEW** - OEWS wage data (2023-2024) |
 | **WARN** | 2 | Worker Adjustment and Retraining Notification data (CA, TX) |
+| **DOS_Numerical_Limits** | 1 | **NEW** - Annual visa numerical limits (FY2025 only) |
 | **DHS_Yearbook** | 1 | DHS Yearbook of Immigration Statistics |
 | **ACS** | 1 | American Community Survey data |
+| **USCIS_Processing_Times** | 0 | **NEW** - Processing times (bot-protected) |
+| **DOS_Waiting_List** | 0 | **NEW** - Waiting list (URL not found) |
 | **TRAC** | 0 | TRAC Immigration data (requires authentication) |
 
 ---
@@ -28,20 +35,60 @@
 ## Detailed Folder Structure
 
 ```
-downloads/ (1,189 files across 162 folders)
+downloads/ (1,226 files across 207 folders)
 │
 ├── _manifest.json (1 file)
 │
 ├── ACS/ (1 file)
 │   └── acs1_2025_nativity.json
 │
-├── BLS/ (3 files)
+├── BLS/ (4 files)
 │   ├── ces_20260220.json
 │   ├── ces_20260220_2.json
-│   └── ces_20260220_3.json
+│   ├── ces_20260220_3.json
+│   └── [Additional BLS employment data]
+│
+├── BLS_OEWS/ (3 files) **NEW**
+│   ├── 2023/ (1 file)
+│   │   └── oews_all_data_2023.zip
+│   ├── 2024/ (1 file)
+│   │   └── oews_all_data_2024.zip
+│   └── docs/ (1 file)
+│       └── Technical_Notes_2025-2026.pdf
+│
+├── Codebooks/ (3 files) **NEW**
+│   ├── soc_crosswalk_2010_to_2018.csv
+│   ├── country_codes_iso.csv
+│   └── eb_subcategory_codes.csv
 │
 ├── DHS_Yearbook/ (1 file)
 │   └── [Yearbook files - skipped if available]
+│
+├── DOL_Record_Layouts/ (15 files) **NEW**
+│   ├── LCA/ (7 files)
+│   │   ├── FY2020/ (1 file)
+│   │   ├── FY2021/ (1 file)
+│   │   ├── FY2022/ (1 file)
+│   │   ├── FY2023/ (1 file)
+│   │   ├── FY2024/ (1 file)
+│   │   ├── FY2025/ (1 file)
+│   │   └── FY2026/ (1 file)
+│   └── PERM/ (8 files)
+│       ├── FY2011/ (1 file)
+│       ├── FY2020/ (1 file)
+│       ├── FY2021/ (1 file)
+│       ├── FY2022/ (1 file)
+│       ├── FY2023/ (1 file)
+│       ├── FY2024/ (1 file)
+│       ├── FY2025/ (1 file)
+│       └── FY2026/ (1 file)
+│
+├── DOS_Numerical_Limits/ (1 file) **NEW**
+│   └── FY2025/ (1 file)
+│       └── Annual_Numerical_Limits_FY2025.pdf
+│
+├── DOS_Waiting_List/ (0 files) **NEW**
+│   └── [Page not found - 404 error]
 │
 ├── LCA/ (217 files in 46 folders)
 │   │
@@ -147,6 +194,26 @@ downloads/ (1,189 files across 162 folders)
 │       ├── 2025/ (39 files)
 │       └── 2026/ (13 files)
 │
+├── USCIS_H1B_Employer_Hub/ (14 files) **NEW**
+│   └── raw/ (14 files)
+│       ├── H1B_Employer_Data_FY2010.csv (4.6 MB)
+│       ├── H1B_Employer_Data_FY2011.csv (5.2 MB)
+│       ├── H1B_Employer_Data_FY2012.csv (4.6 MB)
+│       ├── H1B_Employer_Data_FY2013.csv (4.6 MB)
+│       ├── H1B_Employer_Data_FY2014.csv (4.7 MB)
+│       ├── H1B_Employer_Data_FY2015.csv (4.0 MB)
+│       ├── H1B_Employer_Data_FY2016.csv (4.4 MB)
+│       ├── H1B_Employer_Data_FY2017.csv (4.1 MB)
+│       ├── H1B_Employer_Data_FY2018.csv (4.6 MB)
+│       ├── H1B_Employer_Data_FY2019.csv
+│       ├── H1B_Employer_Data_FY2020.csv
+│       ├── H1B_Employer_Data_FY2021.csv
+│       ├── H1B_Employer_Data_FY2022.csv
+│       └── H1B_Employer_Data_FY2023.csv
+│
+├── USCIS_Processing_Times/ (0 files) **NEW**
+│   └── [Bot protection - 403 Forbidden error]
+│
 ├── Visa_Annual_Reports/ (274 files in 11 folders)
 │   ├── [1 file - hub index]
 │   ├── 2015/ (27 files)
@@ -217,6 +284,54 @@ downloads/ (1,189 files across 162 folders)
     ├── TX/ (1 file)
     └── WA/ (0 files)
 ```
+
+---
+
+## New Data Sources - Download Status
+
+### ✅ Successfully Downloaded (5 sources, 36 files)
+
+1. **DOL OFLC Record Layouts** ✅
+   - **Files:** 15 PDFs
+   - **Coverage:** PERM (FY2011, FY2020-2026) and LCA (FY2020-2026)
+   - **Purpose:** Explains data structure and field definitions for LCA/PERM datasets
+
+2. **BLS OEWS Wage Data** ✅
+   - **Files:** 3 (2 ZIP files + 1 PDF)
+   - **Coverage:** 2023-2024 all data + technical notes
+   - **Size:** Large ZIP files with comprehensive occupational employment/wage data
+
+3. **USCIS H-1B Employer Data Hub** ✅
+   - **Files:** 14 CSVs
+   - **Coverage:** FY2010-FY2023
+   - **Size:** ~60 MB total (4-5 MB per fiscal year)
+   - **Purpose:** Employer-level H-1B approval data by fiscal year
+
+4. **DOS Annual Numerical Limits** ⚠️ *Partial*
+   - **Files:** 1 PDF (FY2025 only)
+   - **Coverage:** Only FY2025 exists at the expected URL
+   - **Note:** FY2015-2024 and FY2026-2027 returned 404 errors
+
+5. **Static Codebooks** ✅
+   - **Files:** 3 CSVs
+   - **Content:**
+     - `soc_crosswalk_2010_to_2018.csv` - SOC code mapping between versions
+     - `country_codes_iso.csv` - Country code reference
+     - `eb_subcategory_codes.csv` - Employment-based preference categories
+
+### ❌ Failed Downloads (2 sources)
+
+1. **USCIS Processing Times** ❌
+   - **Error:** 403 Forbidden (bot protection)
+   - **URL:** https://egov.uscis.gov/processing-times/
+   - **Reason:** USCIS website blocks automated requests
+   - **Workaround Needed:** Manual download or browser automation with human-like behavior
+
+2. **DOS Immigrant Visa Waiting List** ❌
+   - **Error:** 404 Not Found
+   - **URL:** https://travel.state.gov/.../immigrant-visa-waiting-list.html
+   - **Reason:** Page does not exist at expected location
+   - **Workaround Needed:** Find actual URL or verify if data source still exists
 
 ---
 
