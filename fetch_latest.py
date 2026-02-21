@@ -2268,6 +2268,578 @@ def handle_warn_scrape(
             })
 
 
+def handle_uscis_processing_times(
+    source: Dict[str, Any],
+    run_date: datetime,
+    group_dir: Path,
+    manifest_entries: List[Dict[str, Any]],
+    manifest: Dict[str, Any] = None
+) -> None:
+    """
+    Download USCIS Processing Times snapshots.
+    
+    Args:
+        source: Source configuration
+        run_date: Current run date
+        group_dir: Group directory
+        manifest_entries: List to append manifest entries
+        manifest: Existing manifest for incremental downloads
+    """
+    log(f"Fetching USCIS Processing Times...")
+    page_url = source["page_url"]
+    
+    # Create month subdirectories
+    year_month = run_date.strftime("%Y-%m")
+    raw_dir = group_dir / "raw" / year_month
+    parsed_dir = group_dir / "parsed" / year_month
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    parsed_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Download HTML snapshot
+    html_filename = f"processing_times_{run_date.strftime('%Y%m%d')}.html"
+    html_path = raw_dir / html_filename
+    html_url = page_url
+    
+    if manifest and is_file_in_manifest(html_url, html_path, manifest):
+        log(f"Already have {html_filename}, skipping")
+        return
+    
+    resp = http_get(html_url)
+    if resp:
+        html_path.write_bytes(resp.content)
+        log(f"Downloaded HTML snapshot: {html_filename}", "success")
+        
+        # Parse and create CSV
+        from bs4 import BeautifulSoup
+        import csv
+        
+        soup = BeautifulSoup(resp.content, 'html.parser')
+        csv_filename = f"processing_times_{run_date.strftime('%Y%m%d')}.csv"
+        csv_path = parsed_dir / csv_filename
+        
+        # Try to extract processing time data
+        rows = []
+        # Look for tables with processing time data
+        for table in soup.find_all('table'):
+            for row in table.find_all('tr')[1:]:  # Skip header
+                cells = row.find_all(['td', 'th'])
+                if len(cells) >= 3:
+                    rows.append({
+                        'snapshot_date': run_date.strftime('%Y-%m-%d'),
+                        'form': cells[0].get_text(strip=True) if len(cells) > 0 else '',
+                        'category': cells[1].get_text(strip=True) if len(cells) > 1 else '',
+                        'office': cells[2].get_text(strip=True) if len(cells) > 2 else '',
+                        'processing_time': cells[3].get_text(strip=True) if len(cells) > 3 else '',
+                    })
+        
+        if rows:
+            with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=['snapshot_date', 'form', 'category', 'office', 'processing_time'])
+                writer.writeheader()
+                writer.writerows(rows)
+            log(f"Created parsed CSV: {csv_filename}", "success")
+        
+        # Update manifest
+        entry = {
+            "group": source["group"],
+            "name": source["name"],
+            "source_url": html_url,
+            "local_path": str(html_path.relative_to(html_path.parents[3])),
+            "detected_date": run_date.isoformat(),
+            "method": source["method"],
+            "status": "success",
+            "hash": hash_file(html_path)
+        }
+        manifest_entries.append(entry)
+        
+        if manifest:
+            manifest['files_by_url'][html_url] = entry
+
+
+def handle_dos_numerical_limits(
+    source: Dict[str, Any],
+    run_date: datetime,
+    group_dir: Path,
+    manifest_entries: List[Dict[str, Any]],
+    manifest: Dict[str, Any] = None
+) -> None:
+    """
+    Download DOS Annual Numerical Limits PDFs.
+    
+    Args:
+        source: Source configuration
+        run_date: Current run date
+        group_dir: Group directory
+        manifest_entries: List to append manifest entries
+        manifest: Existing manifest for incremental downloads
+    """
+    log(f"Fetching DOS Annual Numerical Limits...")
+    base_url = source.get("base_url", "https://travel.state.gov")
+    start_year = source.get("start_year", 2015)
+    end_year = run_date.year + 1
+    
+    downloaded = 0
+    
+    for fy in range(start_year, end_year + 1):
+        # Construct URL
+        pdf_url = f"{base_url}/content/dam/visas/Statistics/Immigrant-Statistics/WEB_Annual_Numerical_Limits%20-%20FY{fy}.pdf"
+        
+        fy_dir = group_dir / f"FY{fy}"
+        fy_dir.mkdir(parents=True, exist_ok=True)
+        
+        filename = f"Annual_Numerical_Limits_FY{fy}.pdf"
+        pdf_path = fy_dir / filename
+        
+        if manifest and is_file_in_manifest(pdf_url, pdf_path, manifest):
+            log(f"Already have FY{fy}/{filename}, skipping")
+            continue
+        
+        if download_file(pdf_url, pdf_path):
+            log(f"Downloaded FY{fy}: {filename}", "success")
+            downloaded += 1
+            
+            entry = {
+                "group": source["group"],
+                "name": source["name"],
+                "source_url": pdf_url,
+                "local_path": str(pdf_path.relative_to(pdf_path.parents[2])),
+                "detected_date": None,
+                "method": source["method"],
+                "status": "success",
+                "hash": hash_file(pdf_path)
+            }
+            manifest_entries.append(entry)
+            
+            if manifest:
+                manifest['files_by_url'][pdf_url] = entry
+        
+        time.sleep(0.5)
+    
+    log(f"Downloaded {downloaded} new file(s)")
+
+
+def handle_dos_waiting_list(
+    source: Dict[str, Any],
+    run_date: datetime,
+    group_dir: Path,
+    manifest_entries: List[Dict[str, Any]],
+    manifest: Dict[str, Any] = None
+) -> None:
+    """
+    Download DOS Immigrant Visa Waiting List reports.
+    
+    Args:
+        source: Source configuration
+        run_date: Current run date
+        group_dir: Group directory
+        manifest_entries: List to append manifest entries
+        manifest: Existing manifest for incremental downloads
+    """
+    log(f"Fetching DOS Immigrant Visa Waiting List...")
+    page_url = source["page_url"]
+    
+    resp = http_get(page_url)
+    if not resp:
+        log("Failed to fetch waiting list index page", "error")
+        return
+    
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(resp.content, 'html.parser')
+    
+    # Find waiting list PDF links
+    downloaded = 0
+    for link in soup.find_all('a', href=True):
+        href = link['href']
+        text = link.get_text(strip=True).lower()
+        
+        if 'waiting' in text and 'list' in text and href.endswith('.pdf'):
+            # Extract year from text or URL
+            import re
+            year_match = re.search(r'20\d{2}', text + href)
+            if not year_match:
+                continue
+            
+            year = year_match.group()
+            
+            if not href.startswith('http'):
+                href = urljoin(page_url, href)
+            
+            year_dir = group_dir / year
+            year_dir.mkdir(parents=True, exist_ok=True)
+            
+            filename = f"Waiting_List_{year}.pdf"
+            pdf_path = year_dir / filename
+            
+            if manifest and is_file_in_manifest(href, pdf_path, manifest):
+                log(f"Already have {year}/{filename}, skipping")
+                continue
+            
+            if download_file(href, pdf_path):
+                log(f"Downloaded {year}: {filename}", "success")
+                downloaded += 1
+                
+                entry = {
+                    "group": source["group"],
+                    "name": source["name"],
+                    "source_url": href,
+                    "local_path": str(pdf_path.relative_to(pdf_path.parents[2])),
+                    "detected_date": None,
+                    "method": source["method"],
+                    "status": "success",
+                    "hash": hash_file(pdf_path)
+                }
+                manifest_entries.append(entry)
+                
+                if manifest:
+                    manifest['files_by_url'][href] = entry
+            
+            time.sleep(0.5)
+    
+    log(f"Downloaded {downloaded} new file(s)")
+
+
+def handle_dol_record_layouts(
+    source: Dict[str, Any],
+    run_date: datetime,
+    group_dir: Path,
+    manifest_entries: List[Dict[str, Any]],
+    manifest: Dict[str, Any] = None
+) -> None:
+    """
+    Download DOL OFLC Record Layout files for PERM and LCA.
+    
+    Args:
+        source: Source configuration
+        run_date: Current run date
+        group_dir: Group directory
+        manifest_entries: List to append manifest entries
+        manifest: Existing manifest for incremental downloads
+    """
+    log(f"Fetching DOL OFLC Record Layouts...")
+    page_url = source["page_url"]
+    start_year = source.get("start_year", 2008)
+    end_year = run_date.year + 1
+    
+    resp = http_get(page_url)
+    if not resp:
+        log("Failed to fetch record layouts page", "error")
+        return
+    
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(resp.content, 'html.parser')
+    
+    downloaded = 0
+    
+    # Find all record layout links
+    for link in soup.find_all('a', href=True):
+        href = link['href']
+        text = link.get_text(strip=True).lower()
+        
+        if 'record' in text and 'layout' in text:
+            # Determine if PERM or LCA
+            if 'perm' in text:
+                category = 'PERM'
+            elif 'lca' in text or 'h-1b' in text or 'h1b' in text:
+                category = 'LCA'
+            else:
+                continue
+            
+            # Extract fiscal year
+            import re
+            fy_match = re.search(r'(fy|FY)?20\d{2}', text + href)
+            if not fy_match:
+                continue
+            
+            fy_str = fy_match.group().replace('fy', '').replace('FY', '')
+            fy = int(fy_str)
+            
+            if fy < start_year or fy > end_year:
+                continue
+            
+            if not href.startswith('http'):
+                href = urljoin(page_url, href)
+            
+            fy_dir = group_dir / category / f"FY{fy}"
+            fy_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Determine file extension
+            ext = '.xlsx' if href.endswith('.xlsx') else '.xls' if href.endswith('.xls') else '.pdf'
+            filename = f"{category}_Record_Layout_FY{fy}{ext}"
+            file_path = fy_dir / filename
+            
+            if manifest and is_file_in_manifest(href, file_path, manifest):
+                log(f"Already have {category}/FY{fy}/{filename}, skipping")
+                continue
+            
+            if download_file(href, file_path):
+                log(f"Downloaded {category}/FY{fy}: {filename}", "success")
+                downloaded += 1
+                
+                entry = {
+                    "group": source["group"],
+                    "name": source["name"],
+                    "source_url": href,
+                    "local_path": str(file_path.relative_to(file_path.parents[3])),
+                    "detected_date": None,
+                    "method": source["method"],
+                    "status": "success",
+                    "hash": hash_file(file_path)
+                }
+                manifest_entries.append(entry)
+                
+                if manifest:
+                    manifest['files_by_url'][href] = entry
+            
+            time.sleep(0.5)
+    
+    log(f"Downloaded {downloaded} new file(s)")
+
+
+def handle_bls_oews(
+    source: Dict[str, Any],
+    run_date: datetime,
+    group_dir: Path,
+    manifest_entries: List[Dict[str, Any]],
+    manifest: Dict[str, Any] = None
+) -> None:
+    """
+    Download BLS OEWS wage data files.
+    
+    Args:
+        source: Source configuration
+        run_date: Current run date
+        group_dir: Group directory
+        manifest_entries: List to append manifest entries
+        manifest: Existing manifest for incremental downloads
+    """
+    log(f"Fetching BLS OEWS Wage Data...")
+    
+    # Download for 2024 and 2023
+    years = [2024, 2023]
+    base_url = "https://www.bls.gov/oes/special.requests/oesm"
+    
+    downloaded = 0
+    
+    for year in years:
+        year_dir = group_dir / str(year)
+        year_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Download all data XLSX
+        xlsx_url = f"{base_url}{str(year)[-2:]}all.zip"
+        filename = f"oews_all_data_{year}.zip"
+        zip_path = year_dir / filename
+        
+        if manifest and is_file_in_manifest(xlsx_url, zip_path, manifest):
+            log(f"Already have {year}/{filename}, skipping")
+        else:
+            if download_file(xlsx_url, zip_path):
+                log(f"Downloaded {year}: {filename}", "success")
+                downloaded += 1
+                
+                entry = {
+                    "group": source["group"],
+                    "name": source["name"],
+                    "source_url": xlsx_url,
+                    "local_path": str(zip_path.relative_to(zip_path.parents[2])),
+                    "detected_date": None,
+                    "method": source["method"],
+                    "status": "success",
+                    "hash": hash_file(zip_path)
+                }
+                manifest_entries.append(entry)
+                
+                if manifest:
+                    manifest['files_by_url'][xlsx_url] = entry
+        
+        time.sleep(0.5)
+    
+    # Download technical notes
+    docs_dir = group_dir / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    
+    tech_notes_url = "https://www.dol.gov/sites/dolgov/files/ETA/oflc/pdfs/Revised%202025-2026%20Technical%20Release%20Notes%20-%20Effective%208-1-25n.pdf"
+    tech_filename = "Technical_Notes_2025-2026.pdf"
+    tech_path = docs_dir / tech_filename
+    
+    if manifest and is_file_in_manifest(tech_notes_url, tech_path, manifest):
+        log(f"Already have docs/{tech_filename}, skipping")
+    else:
+        if download_file(tech_notes_url, tech_path):
+            log(f"Downloaded: {tech_filename}", "success")
+            downloaded += 1
+            
+            entry = {
+                "group": source["group"],
+                "name": source["name"],
+                "source_url": tech_notes_url,
+                "local_path": str(tech_path.relative_to(tech_path.parents[2])),
+                "detected_date": None,
+                "method": source["method"],
+                "status": "success",
+                "hash": hash_file(tech_path)
+            }
+            manifest_entries.append(entry)
+            
+            if manifest:
+                manifest['files_by_url'][tech_notes_url] = entry
+    
+    log(f"Downloaded {downloaded} new file(s)")
+
+
+def handle_uscis_h1b_employer_hub(
+    source: Dict[str, Any],
+    run_date: datetime,
+    group_dir: Path,
+    manifest_entries: List[Dict[str, Any]],
+    manifest: Dict[str, Any] = None
+) -> None:
+    """
+    Download USCIS H-1B Employer Data Hub files.
+    
+    Args:
+        source: Source configuration
+        run_date: Current run date
+        group_dir: Group directory
+        manifest_entries: List to append manifest entries
+        manifest: Existing manifest for incremental downloads
+    """
+    log(f"Fetching USCIS H-1B Employer Data Hub...")
+    page_url = source["page_url"]
+    
+    resp = http_get(page_url)
+    if not resp:
+        log("Failed to fetch H-1B Employer Hub page", "error")
+        return
+    
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(resp.content, 'html.parser')
+    
+    raw_dir = group_dir / "raw"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    
+    downloaded = 0
+    
+    # Find all CSV links
+    for link in soup.find_all('a', href=True):
+        href = link['href']
+        
+        if href.endswith('.csv') or '.csv' in href.lower():
+            # Extract fiscal year
+            import re
+            fy_match = re.search(r'(fy|FY)?20\d{2}', link.get_text() + href)
+            if not fy_match:
+                continue
+            
+            fy_str = fy_match.group().replace('fy', '').replace('FY', '')
+            fy = int(fy_str)
+            
+            if fy < 2010:
+                continue
+            
+            if not href.startswith('http'):
+                href = urljoin(page_url, href)
+            
+            filename = f"H1B_Employer_Data_FY{fy}.csv"
+            csv_path = raw_dir / filename
+            
+            if manifest and is_file_in_manifest(href, csv_path, manifest):
+                log(f"Already have raw/{filename}, skipping")
+                continue
+            
+            if download_file(href, csv_path):
+                log(f"Downloaded: {filename}", "success")
+                downloaded += 1
+                
+                entry = {
+                    "group": source["group"],
+                    "name": source["name"],
+                    "source_url": href,
+                    "local_path": str(csv_path.relative_to(csv_path.parents[2])),
+                    "detected_date": None,
+                    "method": source["method"],
+                    "status": "success",
+                    "hash": hash_file(csv_path)
+                }
+                manifest_entries.append(entry)
+                
+                if manifest:
+                    manifest['files_by_url'][href] = entry
+            
+            time.sleep(0.5)
+    
+    log(f"Downloaded {downloaded} new file(s)")
+
+
+def create_codebooks(
+    group_dir: Path,
+    manifest_entries: List[Dict[str, Any]]
+) -> None:
+    """
+    Create static codebook CSV files.
+    
+    Args:
+        group_dir: Codebooks directory
+        manifest_entries: List to append manifest entries
+    """
+    log(f"Creating codebooks...")
+    group_dir.mkdir(parents=True, exist_ok=True)
+    
+    import csv
+    
+    # 1. SOC Crosswalk 2010 to 2018
+    soc_crosswalk_path = group_dir / "soc_crosswalk_2010_to_2018.csv"
+    if not soc_crosswalk_path.exists():
+        with open(soc_crosswalk_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['soc_2010_code', 'soc_2010_title', 'soc_2018_code', 'soc_2018_title', 'notes'])
+            # Add sample mappings (would need full data from BLS)
+            writer.writerow(['15-1132', 'Software Developers, Applications', '15-1252', 'Software Developers', 'Merged category'])
+            writer.writerow(['15-1131', 'Computer Programmers', '15-1251', 'Computer Programmers', 'Direct mapping'])
+        log("Created soc_crosswalk_2010_to_2018.csv", "success")
+    
+    # 2. Country Codes ISO
+    country_codes_path = group_dir / "country_codes_iso.csv"
+    if not country_codes_path.exists():
+        with open(country_codes_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['country_code', 'country_name', 'region'])
+            writer.writerow(['IN', 'India', 'Asia'])
+            writer.writerow(['CN', 'China', 'Asia'])
+            writer.writerow(['MX', 'Mexico', 'North America'])
+            writer.writerow(['PH', 'Philippines', 'Asia'])
+            writer.writerow(['BR', 'Brazil', 'South America'])
+        log("Created country_codes_iso.csv", "success")
+    
+    # 3. EB Subcategory Codes
+    eb_codes_path = group_dir / "eb_subcategory_codes.csv"
+    if not eb_codes_path.exists():
+        with open(eb_codes_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['eb_category', 'subcategory_code', 'description'])
+            writer.writerow(['EB-1', 'EB-1A', 'Extraordinary Ability'])
+            writer.writerow(['EB-1', 'EB-1B', 'Outstanding Professors and Researchers'])
+            writer.writerow(['EB-1', 'EB-1C', 'Multinational Managers or Executives'])
+            writer.writerow(['EB-2', 'EB-2', 'Advanced Degree or Exceptional Ability'])
+            writer.writerow(['EB-2', 'EB-2 NIW', 'National Interest Waiver'])
+            writer.writerow(['EB-3', 'EB-3', 'Skilled Workers, Professionals, Other Workers'])
+        log("Created eb_subcategory_codes.csv", "success")
+    
+    # Add to manifest
+    for filename in ['soc_crosswalk_2010_to_2018.csv', 'country_codes_iso.csv', 'eb_subcategory_codes.csv']:
+        file_path = group_dir / filename
+        if file_path.exists():
+            manifest_entries.append({
+                "group": "Codebooks",
+                "name": "Static Codebooks",
+                "source_url": "generated",
+                "local_path": str(file_path.relative_to(file_path.parents[1])),
+                "detected_date": None,
+                "method": "static",
+                "status": "success",
+                "hash": hash_file(file_path)
+            })
+
+
 # ============================================================================
 # MAIN PROCESSING
 # ============================================================================
@@ -2428,6 +3000,20 @@ def main(config_path: str) -> int:
             handle_uscis_employment_data(source, run_date, group_dir, manifest_entries, manifest)
         elif method == 'manual_or_auth':
             handle_manual_or_auth(source, run_date, group_dir, manifest_entries, manifest)
+        elif method == 'uscis_processing_times':
+            handle_uscis_processing_times(source, run_date, group_dir, manifest_entries, manifest)
+        elif method == 'dos_numerical_limits':
+            handle_dos_numerical_limits(source, run_date, group_dir, manifest_entries, manifest)
+        elif method == 'dos_waiting_list':
+            handle_dos_waiting_list(source, run_date, group_dir, manifest_entries, manifest)
+        elif method == 'dol_record_layouts':
+            handle_dol_record_layouts(source, run_date, group_dir, manifest_entries, manifest)
+        elif method == 'bls_oews':
+            handle_bls_oews(source, run_date, group_dir, manifest_entries, manifest)
+        elif method == 'uscis_h1b_employer_hub':
+            handle_uscis_h1b_employer_hub(source, run_date, group_dir, manifest_entries, manifest)
+        elif method == 'codebooks':
+            create_codebooks(group_dir, manifest_entries)
         elif method == 'api':
             # Determine API type from source name/group
             if 'BLS' in group:

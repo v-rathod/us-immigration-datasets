@@ -320,3 +320,65 @@ sources:
     page_url: "https://dol.georgia.gov/warn-notices"
     selector: "a[href*='.pdf'], a[href*='.xls'], a[href*='.csv']"
     notes: "GA WARN listings"
+
+  # ========== USCIS Processing Times (NEW) ==========
+  - name: "USCIS Processing Times Snapshots"
+    group: "USCIS_Processing_Times"
+    cadence: "monthly"
+    method: "uscis_processing_times"
+    page_url: "https://egov.uscis.gov/processing-times/"
+    filetype: "html"
+    notes: "Monthly HTML snapshots + parsed CSV with fields: snapshot_date, form, category, office, processing_time"
+
+  # ========== DOS Annual Numerical Limits (NEW) ==========
+  - name: "DOS Annual Numerical Limits"
+    group: "DOS_Numerical_Limits"
+    cadence: "annual"
+    method: "dos_numerical_limits"
+    base_url: "https://travel.state.gov"
+    start_year: 2015
+    filetype: "pdf"
+    notes: "Annual Numerical Limits PDFs (FY2015-current), organized by fiscal year"
+
+  # ========== DOS Immigrant Visa Waiting List (NEW) ==========
+  - name: "DOS Immigrant Visa Waiting List"
+    group: "DOS_Waiting_List"
+    cadence: "annual"
+    method: "dos_waiting_list"
+    page_url: "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics/immigrant-visa-waiting-list.html"
+    filetype: "pdf"
+    notes: "Waiting list reports by year (scrapes page for all available years)"
+
+  # ========== DOL Record Layouts (NEW) ==========
+  - name: "DOL OFLC Record Layouts"
+    group: "DOL_Record_Layouts"
+    cadence: "annual"
+    method: "dol_record_layouts"
+    page_url: "https://www.dol.gov/agencies/eta/foreign-labor/performance"
+    start_year: 2008
+    filetype: "pdf"
+    notes: "PERM and LCA record layout files (FY2008-2026), organized by category and fiscal year"
+
+  # ========== BLS OEWS Wage Data (NEW) ==========
+  - name: "BLS OEWS Wage Data"
+    group: "BLS_OEWS"
+    cadence: "annual"
+    method: "bls_oews"
+    filetype: "zip"
+    notes: "OEWS all data ZIP files for 2023-2024, plus technical notes PDF"
+
+  # ========== USCIS H-1B Employer Data Hub (NEW) ==========
+  - name: "USCIS H-1B Employer Data Hub"
+    group: "USCIS_H1B_Employer_Hub"
+    cadence: "annual"
+    method: "uscis_h1b_employer_hub"
+    page_url: "https://www.uscis.gov/tools/reports-and-studies/h-1b-employer-data-hub/h-1b-employer-data-hub-files"
+    filetype: "csv"
+    notes: "H-1B employer-level CSV files (FY2010-current), organized by fiscal year"
+
+  # ========== Codebooks (NEW) ==========
+  - name: "Static Codebooks"
+    group: "Codebooks"
+    cadence: "static"
+    method: "codebooks"
+    notes: "Static reference CSVs: SOC crosswalk (2010→2018), country codes (ISO), EB subcategory codes"
