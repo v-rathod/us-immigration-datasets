@@ -1,8 +1,8 @@
 # US Immigration Datasets - Folder Structure
 
-**Last Updated:** February 20, 2026  
-**Total Files:** 1,230  
-**Total Folders:** 210
+**Last Updated:** February 25, 2026  
+**Total Files:** 1,226  
+**Total Folders:** 207
 
 ---
 
@@ -26,9 +26,7 @@
 | **DOS_Numerical_Limits** | 1 | **NEW** - Annual visa numerical limits (FY2025 only) |
 | **DHS_Yearbook** | 1 | DHS Yearbook of Immigration Statistics |
 | **ACS** | 1 | American Community Survey data |
-| **USCIS_Processing_Times** | 2 | **NEW** - USCIS processing times (Feb 2026 snapshot) |
 | **DOS_Waiting_List** | 2 | **NEW** - DOS waiting list (2023: PDF + CSV) |
-| **TRAC** | 0 | TRAC Immigration data (requires authentication) |
 
 ---
 
@@ -168,9 +166,6 @@ downloads/ (1,226 files across 207 folders)
 │       ├── FY2025/ (3 files)
 │       └── FY2026/ (3 files)
 │
-├── TRAC/ (0 files)
-│   └── [Requires authentication - manual download needed]
-│
 ├── USCIS_IMMIGRATION/ (245 files in 17 folders)
 │   └── employment_based/
 │       ├── 1991/ (3 files)
@@ -212,14 +207,6 @@ downloads/ (1,226 files across 207 folders)
 │       ├── H1B_Employer_Data_FY2021.csv
 │       ├── H1B_Employer_Data_FY2022.csv
 │       └── H1B_Employer_Data_FY2023.csv
-│
-├── USCIS_Processing_Times/ (2 files) **NEW**
-│   ├── raw/ (1 file)
-│   │   └── 2026-02/ (1 file)
-│   │       └── processing_times.html (107 KB - Monthly snapshot via browser automation)
-│   └── parsed/ (1 file)
-│       └── 2026-02/ (1 file)
-│           └── processing_times.csv (Columns: snapshot_date, form, category, office, processing_time_min, processing_time_max, unit)
 │
 ├── Visa_Annual_Reports/ (274 files in 11 folders)
 │   ├── [1 file - hub index]
@@ -296,18 +283,9 @@ downloads/ (1,226 files across 207 folders)
 
 ## New Data Sources - Download Status
 
-### ✅ Successfully Downloaded (7 sources, 40 files)
+### ✅ Successfully Downloaded (5 sources, 36 files)
 
-1. **USCIS Processing Times** ✅
-   - **Files:** 2 (HTML + CSV)
-   - **Coverage:** Monthly snapshots (Feb 2026)
-   - **Method:** Selenium browser automation to bypass Cloudflare protection
-   - **Structure:**
-     - `raw/YYYY-MM/processing_times.html` - Full page snapshot
-     - `parsed/YYYY-MM/processing_times.csv` - Extracted data (when available)
-   - **Note:** CSV parsing may be limited due to JavaScript-rendered content
-
-2. **DOS Immigrant Visa Waiting List** ✅
+1. **DOS Immigrant Visa Waiting List** ✅
    - **Files:** 2 (PDF + CSV)
    - **Coverage:** 2023 backlog snapshot
    - **Method:** Direct PDF download + PyPDF2 parsing
@@ -354,13 +332,14 @@ downloads/ (1,226 files across 207 folders)
 ### ❌ Previously Failed (Now Fixed)
 
 **Original Issues:**
-- **USCIS Processing Times:** Was blocked by bot protection (403 Forbidden)
-  - **Solution:** Implemented Selenium with headless Chrome, increased wait time for Cloudflare challenge
-  - **Status:** ✅ Now working
-  
 - **DOS Immigrant Visa Waiting List:** Page not found (404) using old URL pattern
   - **Solution:** Discovered correct URL pattern through parent statistics page
   - **Status:** ✅ Partially working (2023 confirmed)
+
+### ❌ Removed Sources
+
+- **USCIS Processing Times:** Removed — Cloudflare-protected SPA; data loaded via JavaScript API calls making reliable automated extraction infeasible
+- **TRAC Immigration Data:** Removed — Requires paid subscription/authentication; no automated download possible
 
 ---
 
@@ -403,11 +382,7 @@ downloads/ (1,226 files across 207 folders)
 
 The following data sources have handler functions implemented but data not yet downloaded:
 
-1. **USCIS Processing Times** (uscis_processing_times)
-   - Monthly HTML snapshots + parsed CSV
-   - Tracks processing times by form, category, and office
-
-2. **DOS Annual Numerical Limits** (dos_numerical_limits)
+1. **DOS Annual Numerical Limits** (dos_numerical_limits)
    - FY2015-current PDFs
    - Annual visa category limits
 
@@ -443,7 +418,6 @@ python fetch_latest.py sources.yaml
 
 - **Incremental Downloads:** The manifest system tracks all downloaded files and only fetches new data on subsequent runs
 - **WARN Data:** Most state sources require interactive access or have no recent data
-- **TRAC Data:** Requires paid subscription, marked for manual download
 - **Duplicate PERM:** The PERM/ folder contains a nested PERM/PERM/ structure (artifact of handler logic)
 
 ---
@@ -455,4 +429,4 @@ python fetch_latest.py sources.yaml
 
 ---
 
-*Generated: February 20, 2026*
+*Generated: February 25, 2026*

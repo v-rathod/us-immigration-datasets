@@ -36,10 +36,6 @@ sources:
     selector: "a[href]"
     notes: "Employment-based immigration forms with FULL pagination: I-140, I-485, I-765, I-360, I-526/I-526E, and EB inventory files. Historical coverage: 1991-present across 7 pages. Organized by year."
 
-  # ========== USCIS Processing Times (Skipped - HTML only) ==========
-  # Processing times are HTML-only interactive tools, skipping
-  # User can manually export if needed
-
   # ========== Visa Bulletin ==========
   - name: "Visa Bulletin PDFs (Monthly)"
     group: "Visa_Bulletin"
@@ -103,15 +99,6 @@ sources:
     filetype: "xlsx"
     selector: "a[href*='.xls'], a[href*='.pdf']"
     notes: "Annual yearbook - may be released table-by-table"
-
-  # ========== TRAC Immigration (Auth Required) ==========
-  - name: "TRAC Immigration Data"
-    group: "TRAC"
-    cadence: "varies"
-    method: "manual_or_auth"
-    page_url: "https://trac.syr.edu"
-    filetype: "n/a"
-    notes: "Requires authentication/subscription - skip automated download"
 
   # ========== BLS API ==========
   - name: "BLS Employment & Wage Data"
@@ -320,15 +307,6 @@ sources:
     page_url: "https://dol.georgia.gov/warn-notices"
     selector: "a[href*='.pdf'], a[href*='.xls'], a[href*='.csv']"
     notes: "GA WARN listings"
-
-  # ========== USCIS Processing Times (NEW) ==========
-  - name: "USCIS Processing Times Snapshots"
-    group: "USCIS_Processing_Times"
-    cadence: "monthly"
-    method: "uscis_processing_times"
-    page_url: "https://egov.uscis.gov/processing-times/"
-    filetype: "html"
-    notes: "Monthly HTML snapshots + parsed CSV with fields: snapshot_date, form, category, office, processing_time"
 
   # ========== DOS Annual Numerical Limits (NEW) ==========
   - name: "DOS Annual Numerical Limits"

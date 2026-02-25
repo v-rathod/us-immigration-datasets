@@ -30,17 +30,17 @@
 - Generate field inventory (Appendix A)
 - Update dates and commit
 
-## Project Status (Feb 24, 2026)
-- ✅ 17/17 data sources operational (100% complete)
-- ✅ 1,230 files across 210 folders
-- ✅ 7 new sources added (USCIS Processing Times, DOS Waiting List, etc.)
+## Project Status (Feb 25, 2026)
+- ✅ 15/15 active data sources operational
+- ✅ 1,226 files across 207 folders
+- ✅ 5 new sources added (DOL Record Layouts, BLS OEWS, H-1B Employer Hub, DOS Numerical Limits, Codebooks, DOS Waiting List)
 - ✅ Incremental downloads working (manifest-based)
 
 ## Key Files
-- **fetch_latest.py** (3,309 lines) - Main downloader with 17 source handlers
-- **sources.yaml** - 17 data source configurations
-- **data-dictionary.md** - Functional contract for downstream projects (15+ datasets)
-- **FOLDER_STRUCTURE.md** - Current repo state (1,230 files, 210 folders)
+- **fetch_latest.py** (3,309 lines) - Main downloader with 15 source handlers
+- **sources.yaml** - 15 data source configurations
+- **data-dictionary.md** - Functional contract for downstream projects (14 datasets)
+- **FOLDER_STRUCTURE.md** - Current repo state (1,226 files, 207 folders)
 - **.ai-instructions.md** - Detailed context for AI agents
 - **downloads/** - 3-5 GB data (gitignored)
 
@@ -84,7 +84,7 @@ source .venv/bin/activate
 - ❌ Use absolute paths (always relative)
 - ❌ Commit .venv/ or downloads/ (gitignored)
 
-## Data Sources (17 total)
+## Data Sources (15 active)
 
 ### Original 10
 1. Visa Bulletin (monthly PDFs, 2011-2026)
@@ -96,21 +96,19 @@ source .venv/bin/activate
 7. NIV Statistics
 8. BLS, ACS, WARN
 
-### New 7 (Feb 2026)
+### New 5 (Feb 2026)
 9. ✅ DOL Record Layouts
 10. ✅ BLS OEWS Wages
 11. ✅ USCIS H-1B Employer Hub
 12. ✅ DOS Numerical Limits
 13. ✅ Codebooks (SOC, country, EB)
-14. ✅ USCIS Processing Times (Selenium/Cloudflare bypass)
-15. ✅ DOS Waiting List (PDF + PyPDF2)
+14. ✅ DOS Waiting List (PDF + PyPDF2)
+
+### Removed
+- ❌ USCIS Processing Times (Cloudflare-protected SPA, not extractable)
+- ❌ TRAC Immigration Data (requires paid subscription)
 
 ## Special Handlers
-
-### USCIS Processing Times (lines 2271-2420)
-- Selenium + headless Chrome
-- 10s Cloudflare wait, CDP commands
-- Monthly snapshots: `raw/YYYY-MM/processing_times.html`
 
 ### DOS Waiting List (lines 2523-2770)
 - Multi-pattern URL testing

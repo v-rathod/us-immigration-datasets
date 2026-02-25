@@ -11,7 +11,7 @@ This automated system fetches and organizes **900+ files** spanning **decades of
 - **📁 Organized Storage**: Files automatically organized by fiscal year and data type
 - **⚙️ Config-Driven**: Easy customization via `sources.yaml`
 - **🛡️ Robust**: Built-in retry logic, bot detection bypass, error handling
-- **🎯 Specialized Handlers**: 16 custom handlers for different government data formats
+- **🎯 Specialized Handlers**: 15 custom handlers for different government data formats
 - **📝 Manifest Tracking**: JSON-based download history with file hashes and timestamps
 
 ## 📦 Data Sources & Coverage

@@ -136,25 +136,7 @@ Files:
 
 ---
 
-## 7) USCIS Processing Times
-
-**Path**: `downloads/USCIS_Processing_Times/` (HTML + parsed CSV for 2026‑02)  
-**Purpose**: Published **processing‑time ranges** per form/category/office; used for timeline bands and expectations in UI.
-
-**Key fields (parsed CSV)**
-- `snapshot_date`  
-- `form` (I‑140, I‑485…)  
-- `category` (if present)  
-- `office` (if present)  
-- `processing_time_min`, `processing_time_max`, `unit` (e.g., months)
-
-**Joins**: `form` via an internal form list; `category` ↔ EB codebook  
-**Cadence**: Snapshot monthly  
-**Caveats**: Site is interactive (browser automation); office fidelity may vary by snapshot.
-
----
-
-## 8) DOL LCA (H‑1B) Disclosure
+## 7) DOL LCA (H‑1B) Disclosure
 
 **Path**: `downloads/LCA/` and `downloads/LCA/H1B/` (FY2008–2026)  
 **Purpose**: Employer **intent** filings with wage/SOC/location → **wage comparison**, **sponsorship hotspots**, employer context.  
@@ -179,7 +161,7 @@ Files:
 
 ---
 
-## 9) DOL PERM Disclosure
+## 8) DOL PERM Disclosure
 
 **Path**: `downloads/PERM/` (FY2008–2026)  
 **Purpose**: EB green card **labor certification outcomes** used for **GC‑friendliness**, **audit risk**, and **denial trends**.
@@ -198,7 +180,7 @@ Files:
 
 ---
 
-## 10) DOL OFLC Record Layouts
+## 9) DOL OFLC Record Layouts
 
 **Path**: `downloads/DOL_Record_Layouts/` (PERM & LCA; FY2011, 2020–2026)  
 **Purpose**: Authoritative **schemas** for LCA & PERM by FY; mandatory for accurate parsing.
@@ -210,7 +192,7 @@ Files:
 
 ---
 
-## 11) USCIS H‑1B Employer Data Hub
+## 10) USCIS H‑1B Employer Data Hub
 
 **Path**: `downloads/USCIS_H1B_Employer_Hub/raw/` (FY2010–2023 CSVs)  
 **Purpose**: Employer‑level H‑1B **approvals/denials** by FY; enriches employer insights (with LCA/PERM context).
@@ -226,7 +208,7 @@ Files:
 
 ---
 
-## 12) BLS OEWS (Wage Percentiles)
+## 11) BLS OEWS (Wage Percentiles)
 
 **Path**: `downloads/BLS_OEWS/` (2023–2024 "All data" ZIP/XLSX + notes)  
 **Purpose**: Official **wage percentiles** (P10/25/Median/75/90) by **SOC** and **area** for salary competitiveness analysis.
@@ -244,7 +226,7 @@ Files:
 
 ---
 
-## 13) ACS (Census)
+## 12) ACS (Census)
 
 **Path**: `downloads/ACS/` (e.g., nativity)  
 **Purpose**: Contextual demographics for normalization (e.g., per‑capita rates, geographic controls).
@@ -255,7 +237,7 @@ Files:
 
 ---
 
-## 14) DHS Yearbook
+## 13) DHS Yearbook
 
 **Path**: `downloads/DHS_Yearbook/`  
 **Purpose**: Long‑run immigration totals and breakdowns; good QA reference and contextual backdrop.
@@ -265,7 +247,7 @@ Files:
 
 ---
 
-## 15) NIV Statistics
+## 14) NIV Statistics
 
 **Path**: `downloads/NIV_Statistics/`  
 **Purpose**: Nonimmigrant visa workload and detail tables for context on job‑market flows.
@@ -284,7 +266,6 @@ You will normalize the above into (suggested):
 - `fact_lca` (LCA filings)
 - `fact_oews` (wage percentiles)
 - `fact_uscis_forms` (I‑140/I‑485 volumes/outcomes)
-- `fact_processing_times` (snapshots)
 - `fact_iv_issuances_monthly` (DOS monthly)
 - `fact_waiting_list` (DOS annual backlog)
 
@@ -296,7 +277,7 @@ Keep **source provenance** columns on all facts: `source_file`, `source_url`, `i
 
 - **LCA ≠ hire or petition approval**; LCAs reflect employer intent and may include location changes.  
 - **Forecasts are estimates**, not legal advice; always show **P10/P50/P90** ranges and cite month.  
-- **Processing times are operational**, not visa availability; Visa Bulletin controls final action and filing.  
+
 - **SOC and area definitions change**; visualizations reflect the latest normalizations.
 
 ---
