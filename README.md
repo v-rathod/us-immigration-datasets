@@ -2,7 +2,14 @@
 
 🚀 **Comprehensive historical data collection tool** for immigration and labor datasets from official U.S. government sources.
 
-This automated system fetches and organizes **900+ files** spanning **decades of immigration data** (1991-2026), with intelligent incremental updates to avoid duplicate downloads.
+This automated system fetches and organizes **1,033+ files** spanning **decades of immigration data** (1991-2026), with intelligent incremental updates to avoid duplicate downloads.
+
+> **📋 For AI Assistants** — start here before writing any code:
+> 1. [`/Users/vrathod1/dev/NorthStar/NORTHSTAR_VISION.md`](../NORTHSTAR_VISION.md) — Program vision, architecture, guardrails
+> 2. [`/Users/vrathod1/dev/NorthStar/BEST_PRACTICES.md`](../BEST_PRACTICES.md) — Engineering conventions, testing strategy, agent checklist
+> 3. [`ARCHITECTURE.md`](ARCHITECTURE.md) — P1 technical design
+> 4. [`.github/copilot-instructions.md`](.github/copilot-instructions.md) — P1 detailed context (auto-loaded by Copilot)
+> 5. [`PROGRESS.md`](PROGRESS.md) — Chronological milestone history
 
 ## ✨ Key Features
 
