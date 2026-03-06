@@ -7,8 +7,76 @@
 > 2. **`/Users/vrathod1/dev/NorthStar/BEST_PRACTICES.md`** — Engineering conventions, design rules, testing strategy, agent checklist
 > 3. **`ARCHITECTURE.md`** (this repo) — P1 technical design
 > 4. This file — P1 detailed context
+>
+> **⚡ IMPORTANT: Terminal Commands Enabled**
+> VS Code has been configured to auto-approve terminal commands. You can now:
+> - Run `npm run dev`, `npm test`, `npx next build` directly (no approval needed)
+> - Execute `python3` scripts, multi-line heredocs, piped commands
+> - Use `git add/commit/push/pull` and process management (`pkill`, `killall`)
+> - Chain commands with `&&`, `||`, and pipes without file workarounds
+>
+> **NorthStar Program Codenames**:
+> | Internal | Codename | Repository | Role |
+> |----------|----------|------------|------|
+> | P1 | **Horizon** | fetch-immigration-data (THIS REPO) | Data collection — scans the horizon |
+> | P2 | **Meridian** | immigration-model-builder | Analytics backbone — curates, measures, models |
+> | P3 | **Compass** | immigration-insights-app | User experience — guides with insights |
+>
+> Use P1/P2/P3 in internal code and comments. Use Horizon/Meridian/Compass in public docs.
 
-## Project Overview
+---
+
+## Quick Start for This Agent (NEW SESSION)
+
+### VS Code Configuration ✅
+Your VS Code settings have been configured for AI agent workflows:
+- **File operations**: Auto-approved (`chat.fileOperations.autoApprove: true`)
+- **Terminal commands**: Expanded allowlist allows direct execution of:
+  - Package managers: `npm run`, `npm test`, `npx`, `yarn`, `pnpm`
+  - Runtimes: `node`, `python3`, `python`
+  - Version control: `git add`, `git commit`, `git push`, `git pull`, `git fetch`
+  - Process management: `pkill`, `killall`, `pgrep`
+  - Multi-line commands: Heredocs (`python3 << 'EOF'`), piped chains (`| xargs`, `| grep`), logical operators (`&&`, `||`)
+
+### Switching Between Projects
+When you need to work across P1/P2/P3:
+```bash
+# P1 (Horizon — This Repo) — Data collection
+cd /Users/vrathod1/dev/NorthStar/fetch-immigration-data
+
+# P2 (Meridian) — Data & Models
+cd /Users/vrathod1/dev/NorthStar/immigration-model-builder
+
+# P3 (Compass) — User experience
+cd /Users/vrathod1/dev/NorthStar/immigration-insights-app
+```
+
+### Current Project Status (as of Mar 6, 2026)
+- **P1 (Horizon)**: Data collection pipeline, latest sources in `downloads/`, auto-commit policy active
+- **P2 (Meridian)**: 591 tests passing, data pipeline stable, recent USCIS approvals fixes merged, incremental builds enabled
+- **P3 (Compass)**: 549 tests passing, all dashboards live, 102K+ employers searchable, AWS CloudFront deployed
+
+### Common Workflow Patterns (P1)
+1. **New data source** → `sources.yaml` + handler → `python3 fetch_latest.py` → commit
+2. **Verify downloads** → Check `downloads/` → Update `data-dictionary.md` → commit
+3. **Schema changes** → Update `data-dictionary.md` → Notify P2 → commit
+4. **Check P2 artifacts** → `cd ../immigration-model-builder && python3 -c "import pandas as pd; ..."`
+
+### Recent Session Notes (Mar 6, 2026)
+**Just configured**: Terminal command auto-approval in VS Code settings.json
+- **Single-line commands** working: `npm run dev`, `npm test`, `git commit`, etc.
+- **Multi-line commands** now supported: Heredocs, pipes with `xargs`, `&&`/`||` chains
+- **File operations** auto-approved without dialogs
+- **Blocker resolved**: Agent can now execute complex commands directly instead of creating wrapper files
+
+**Current test status**:
+- P3: 549 tests passing (latest from Occupation Demand improvements)
+- P2: 591 tests passing (recent USCIS approvals fixes)
+- P1: Data pipeline operational
+
+---
+
+## Project Overview (P1 — Horizon)
 **Repository:** US Immigration Datasets (fetch-immigration-data)  
 **Location:** `/Users/vrathod1/dev/NorthStar/fetch-immigration-data/`  
 **GitHub:** https://github.com/v-rathod/us-immigration-datasets  
