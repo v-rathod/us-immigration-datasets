@@ -579,3 +579,13 @@ For issues or questions:
 **Current Version**: 1.0.0  
 **Python Version**: 3.12.3  
 **Total Files Collected**: 1,033+
+
+## Latest Session Snapshot (2026-03-10)
+
+- See [LATEST_STATUS.md](../LATEST_STATUS.md) for the full session handoff and verification steps.
+- Snapshot highlights:
+  - **P1 (Horizon)**: Data collection pipeline is operational and provides artifacts to Meridian; no immediate action required.
+  - **P2 (Meridian)**: Exported artifacts verified; test suite: **562/562** passing.
+  - **P3 (Compass)**: Applied fiscal-year filter fix in `scripts/sync_p2_data.py` and rebuilt static JSON; test suite: **579/579** passing.
+- For automated agents: read [LATEST_STATUS.md](../LATEST_STATUS.md) first — it contains specific commands to verify data and tests.
+
