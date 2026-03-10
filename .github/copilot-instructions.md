@@ -51,10 +51,10 @@ cd /Users/vrathod1/dev/NorthStar/immigration-model-builder
 cd /Users/vrathod1/dev/NorthStar/immigration-insights-app
 ```
 
-### Current Project Status (as of Mar 6, 2026)
-- **P1 (Horizon)**: Data collection pipeline, latest sources in `downloads/`, auto-commit policy active
-- **P2 (Meridian)**: 591 tests passing, data pipeline stable, recent USCIS approvals fixes merged, incremental builds enabled
-- **P3 (Compass)**: 549 tests passing, all dashboards live, 102K+ employers searchable, AWS CloudFront deployed
+### Current Project Status (as of Mar 10, 2026)
+- **P1 (Horizon)**: Data collection pipeline operational, 1,033+ files downloaded, manifest tracking active
+- **P2 (Meridian)**: 562 tests passing, data pipeline stable, 46 data artifacts + 3 stubs, all export cleanly
+- **P3 (Compass)**: 579 tests passing, all dashboards live, 94K+ employer shards with FY2023 data, AWS deployed
 
 ### Common Workflow Patterns (P1)
 1. **New data source** → `sources.yaml` + handler → `python3 fetch_latest.py` → commit
@@ -62,17 +62,19 @@ cd /Users/vrathod1/dev/NorthStar/immigration-insights-app
 3. **Schema changes** → Update `data-dictionary.md` → Notify P2 → commit
 4. **Check P2 artifacts** → `cd ../immigration-model-builder && python3 -c "import pandas as pd; ..."`
 
-### Recent Session Notes (Mar 6, 2026)
-**Just configured**: Terminal command auto-approval in VS Code settings.json
-- **Single-line commands** working: `npm run dev`, `npm test`, `git commit`, etc.
-- **Multi-line commands** now supported: Heredocs, pipes with `xargs`, `&&`/`||` chains
-- **File operations** auto-approved without dialogs
-- **Blocker resolved**: Agent can now execute complex commands directly instead of creating wrapper files
+### Recent Session Notes (Mar 10, 2026)
+**Milestone 21 (P2) + Milestone 10.40 (P3) Complete**: P2→P3 Fiscal-Year Filter Fix
+- P1 sends data to P2 (unchanged) ✅
+- P2 exports clean artifacts with fiscal-year partitions (FY2008..2026) ✅
+- P3 sync was using calendar cutoff (received_date), lost FY2023 data → **NOW FIXED** ✅
+- Optum Services shard: 1,928 LCA rows (FY2023–2026), up from 1,299 (FY2024–2026) ✅
+- All tests green: P1 (operational), P2 (562), P3 (579) ✅
+- **Key lesson**: When exporting time-series data, filter on actual partition keys (fiscal_year), not derived calendar properties
 
-**Current test status**:
-- P3: 549 tests passing (latest from Occupation Demand improvements)
-- P2: 591 tests passing (recent USCIS approvals fixes)
-- P1: Data pipeline operational
+**Documentation Updated** (Mar 10):
+- P1/P2/P3 PROGRESS.md files: Added latest milestones
+- All copilot-instructions.md across projects: Updated with Mar 10 status
+- All docs synchronized for new chat sessions
 
 ---
 
