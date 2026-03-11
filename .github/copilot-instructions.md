@@ -63,16 +63,17 @@ cd /Users/vrathod1/dev/NorthStar/immigration-insights-app
 4. **Check P2 artifacts** → `cd ../immigration-model-builder && python3 -c "import pandas as pd; ..."`
 
 ### Recent Session Notes (Mar 10, 2026)
-**Milestone 21 (P2) + Milestone 10.40 (P3) Complete**: P2→P3 Fiscal-Year Filter Fix
-- P1 sends data to P2 (unchanged) ✅
-- P2 exports clean artifacts with fiscal-year partitions (FY2008..2026) ✅
-- P3 sync was using calendar cutoff (received_date), lost FY2023 data → **NOW FIXED** ✅
-- Optum Services shard: 1,928 LCA rows (FY2023–2026), up from 1,299 (FY2024–2026) ✅
+**Milestone 22 (P2) + Milestone 10.41 (P3) Complete**: Full Pipeline Refresh + Stage 2c Bug Fix
+- P1 data check: 9 new files downloaded (BLS CES, ACS, 6 Visa Stats PDFs, CA WARN) ✅
+- P2 full rebuild (Stages 1–4): Fixed `_UNKNOWN` sentinel bug in `build_approval_denial_trends.py` + `build_approval_denial_detailed.py` ✅
+- P3 sync: 21 dashboard JSONs + ~95K employer shards refreshed ✅
 - All tests green: P1 (operational), P2 (562), P3 (579) ✅
-- **Key lesson**: When exporting time-series data, filter on actual partition keys (fiscal_year), not derived calendar properties
+- **Key lesson**: pyarrow-backed string columns need explicit `.astype(str)` before `.str.startswith()` works
 
 **Documentation Updated** (Mar 10):
-- P1/P2/P3 PROGRESS.md files: Added latest milestones
+- P1 PROGRESS.md: Created (Milestone 1)
+- P2 PROGRESS.md: Added Milestone 22
+- P3 PROGRESS.md: Added Milestone 10.41
 - All copilot-instructions.md across projects: Updated with Mar 10 status
 - All docs synchronized for new chat sessions
 
