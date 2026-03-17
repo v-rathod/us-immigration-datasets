@@ -1,3 +1,25 @@
+# 🌅 Horizon — NorthStar Data Collection
+
+> **Part of the NorthStar Immigration Analytics Program**
+> 
+> **📖 READ FIRST:** [NorthStar Vision & Architecture](../northstar-docs/README.md) — Understanding the full program before diving into this project
+>
+> **Project Role:** Data collection layer — fetches immigration PDFs, parses tables, stores raw data for Meridian (P2)
+
+## 🏗️ NorthStar Program Structure
+
+```
+P1: Horizon (This Project)  P2: Meridian              P3: Compass
+Data Collection         →    Analytics & ML         →    Web Dashboard
+├ Fetch PDFs                 ├ Build forecasts         ├ Static Next.js site
+├ Parse tables               ├ Compute scores          ├ 9 interactive dashboards
+└ Store raw data             └ Generate artifacts      └ 929+ regression tests
+```
+
+**Program Overview:** [README.md](../northstar-docs/README.md) • **Setup Guide:** [SETUP_GUIDE.md](../northstar-docs/SETUP_GUIDE.md) • **Best Practices:** [BEST_PRACTICES.md](../northstar-docs/BEST_PRACTICES.md) • **Vision:** [NORTHSTAR_VISION.md](../northstar-docs/NORTHSTAR_VISION.md)
+
+---
+
 # Immigration & Labor Data Fetcher
 
 🚀 **Comprehensive historical data collection tool** for immigration and labor datasets from official U.S. government sources.
@@ -5,8 +27,8 @@
 This automated system fetches and organizes **1,033+ files** spanning **decades of immigration data** (1991-2026), with intelligent incremental updates to avoid duplicate downloads.
 
 > **📋 For AI Assistants** — start here before writing any code:
-> 1. [`/Users/vrathod1/dev/NorthStar/NORTHSTAR_VISION.md`](../NORTHSTAR_VISION.md) — Program vision, architecture, guardrails
-> 2. [`/Users/vrathod1/dev/NorthStar/BEST_PRACTICES.md`](../BEST_PRACTICES.md) — Engineering conventions, testing strategy, agent checklist
+> 1. [Shared Vision & Architecture](../northstar-docs/NORTHSTAR_VISION.md) — Program vision, architecture, guardrails
+> 2. [Shared Best Practices](../northstar-docs/BEST_PRACTICES.md) — Engineering conventions, testing strategy, agent checklist
 > 3. [`ARCHITECTURE.md`](ARCHITECTURE.md) — P1 technical design
 > 4. [`.github/copilot-instructions.md`](.github/copilot-instructions.md) — P1 detailed context (auto-loaded by Copilot)
 > 5. [`PROGRESS.md`](PROGRESS.md) — Chronological milestone history
