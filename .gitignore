@@ -12,6 +12,11 @@ venv/
 ENV/
 env/
 
+# Environment
+.env
+.env.local
+.env.*.local
+
 # IDE
 .vscode/
 .idea/
@@ -19,14 +24,28 @@ env/
 *.swo
 *~
 
-# Downloaded data (too large for git)
+# Downloaded data (too large for git, shared via GitHub Releases)
+# See: https://github.com/v-rathod/us-immigration-datasets/releases
 downloads/
 exports/
+data/
+*.pdf
+*.csv
+*.xlsx
+*.json
 
 # Logs
 *.log
 fetch_log.txt
 /tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+*.cache
+.cache/
 
 # OS
 .DS_Store
