@@ -3,10 +3,12 @@
 > **START HERE — Cross-Project Context:**
 > All three NorthStar projects live under `/Users/vrathod1/dev/NorthStar/`.
 > Before starting work, read these shared docs:
-> 1. **`/Users/vrathod1/dev/NorthStar/NORTHSTAR_VISION.md`** — Program vision, architecture, guardrails
-> 2. **`/Users/vrathod1/dev/NorthStar/BEST_PRACTICES.md`** — Engineering conventions, design rules, testing strategy, agent checklist
-> 3. **`ARCHITECTURE.md`** (this repo) — P1 technical design
-> 4. This file — P1 detailed context
+> 1. **`/Users/vrathod1/dev/NorthStar/northstar-docs/GUARDRAILS.md`** — **The Ten Commandments** (non-negotiable program-wide rules)
+> 2. **`.github/GUARDRAILS.md`** (this repo) — P1 Horizon project-specific guardrails
+> 3. **`/Users/vrathod1/dev/NorthStar/northstar-docs/NORTHSTAR_VISION.md`** — Program vision & architecture
+> 4. **`/Users/vrathod1/dev/NorthStar/northstar-docs/BEST_PRACTICES.md`** — Engineering conventions & standards
+> 5. **`ARCHITECTURE.md`** (this repo) — P1 technical design
+> 6. This file — P1 detailed context
 >
 > **⚡ IMPORTANT: Terminal Commands Enabled**
 > VS Code has been configured to auto-approve terminal commands. You can now:

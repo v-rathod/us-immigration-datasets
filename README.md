@@ -16,7 +16,7 @@ Data Collection         →    Analytics & ML         →    Web Dashboard
 └ Store raw data             └ Generate artifacts      └ 929+ regression tests
 ```
 
-**Program Overview:** [README.md](../northstar-docs/README.md) • **Setup Guide:** [SETUP_GUIDE.md](../northstar-docs/SETUP_GUIDE.md) • **Best Practices:** [BEST_PRACTICES.md](../northstar-docs/BEST_PRACTICES.md) • **Vision:** [NORTHSTAR_VISION.md](../northstar-docs/NORTHSTAR_VISION.md)
+**Program Overview:** [README.md](../northstar-docs/README.md) • **Guardrails:** [GUARDRAILS.md](../northstar-docs/GUARDRAILS.md) • **Setup Guide:** [SETUP_GUIDE.md](../northstar-docs/SETUP_GUIDE.md) • **Best Practices:** [BEST_PRACTICES.md](../northstar-docs/BEST_PRACTICES.md) • **Vision:** [NORTHSTAR_VISION.md](../northstar-docs/NORTHSTAR_VISION.md)
 
 ---
 
@@ -27,11 +27,13 @@ Data Collection         →    Analytics & ML         →    Web Dashboard
 This automated system fetches and organizes **1,033+ files** spanning **decades of immigration data** (1991-2026), with intelligent incremental updates to avoid duplicate downloads.
 
 > **📋 For AI Assistants** — start here before writing any code:
-> 1. [Shared Vision & Architecture](../northstar-docs/NORTHSTAR_VISION.md) — Program vision, architecture, guardrails
-> 2. [Shared Best Practices](../northstar-docs/BEST_PRACTICES.md) — Engineering conventions, testing strategy, agent checklist
-> 3. [`ARCHITECTURE.md`](ARCHITECTURE.md) — P1 technical design
-> 4. [`.github/copilot-instructions.md`](.github/copilot-instructions.md) — P1 detailed context (auto-loaded by Copilot)
-> 5. [`PROGRESS.md`](PROGRESS.md) — Chronological milestone history
+> 1. [Program Guardrails (Ten Commandments)](../northstar-docs/GUARDRAILS.md) — Non-negotiable program-wide rules
+> 2. [P1 Guardrails](.github/GUARDRAILS.md) — Project-specific rules for Horizon
+> 3. [Shared Vision & Architecture](../northstar-docs/NORTHSTAR_VISION.md) — Program vision, architecture, guardrails
+> 4. [Shared Best Practices](../northstar-docs/BEST_PRACTICES.md) — Engineering conventions, testing strategy, agent checklist
+> 5. [`ARCHITECTURE.md`](ARCHITECTURE.md) — P1 technical design
+> 6. [`.github/copilot-instructions.md`](.github/copilot-instructions.md) — P1 detailed context (auto-loaded by Copilot)
+> 7. [`PROGRESS.md`](PROGRESS.md) — Chronological milestone history
 
 ## ✨ Key Features
 
