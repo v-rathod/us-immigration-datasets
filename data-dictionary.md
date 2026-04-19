@@ -29,8 +29,9 @@ Files:
 
 ## 1) Visa Bulletin
 
-**Path**: `downloads/Visa_Bulletin/` (monthly PDFs, 2011–2026)  
-**Purpose**: Monthly EB **cutoff dates** (Final Action & Dates for Filing) by category and chargeability; drives PD forecasting & retrogression risk.
+**Path**: `downloads/Visa_Bulletin/` (monthly PDFs, 2011–May 2026)  
+**Purpose**: Monthly EB **cutoff dates** (Final Action & Dates for Filing) by category and chargeability; drives PD forecasting & retrogression risk.  
+**Last updated**: April 19, 2026 (May 2026 bulletin downloaded)
 
 **Key fields to extract (normalized)**
 - `bulletin_year`, `bulletin_month`  
