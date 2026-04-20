@@ -1,8 +1,8 @@
 # US Immigration Datasets - Folder Structure
 
-**Last Updated:** February 25, 2026  
-**Total Files:** 1,226  
-**Total Folders:** 207
+**Last Updated:** April 19, 2026  
+**Total Files:** 1,252  
+**Total Folders:** 202
 
 ---
 
@@ -11,22 +11,22 @@
 | Data Group | Files | Description |
 |------------|-------|-------------|
 | **Visa_Annual_Reports** | 274 | State Department annual visa statistical reports (2015-2024) |
-| **USCIS_IMMIGRATION** | 245 | Employment-based immigration forms (I-140, I-485, I-765, EB inventory) |
+| **USCIS_IMMIGRATION** | 251 | Employment-based immigration forms (I-140, I-485, I-765, EB inventory) |
 | **LCA** | 217 | H-1B Labor Condition Applications disclosure data (FY2008-2026) |
-| **Visa_Statistics** | 198 | Monthly immigrant visa issuance statistics (2017-2025) |
-| **Visa_Bulletin** | 168 | Monthly visa bulletin PDFs (2011-2026) |
+| **Visa_Statistics** | 208 | Monthly immigrant visa issuance statistics (2017-2025) |
+| **Visa_Bulletin** | 170 | Monthly visa bulletin PDFs (2011-2026) |
 | **PERM** | 47 | Permanent Labor Certification disclosure data (FY2008-2026) |
 | **NIV_Statistics** | 32 | Nonimmigrant visa workload and detail tables |
 | **DOL_Record_Layouts** | 15 | **NEW** - PERM/LCA record layout files (FY2020-2026) |
-| **USCIS_H1B_Employer_Hub** | 14 | **NEW** - H-1B employer-level data (FY2010-2023) |
-| **BLS** | 4 | Bureau of Labor Statistics employment data |
+| **USCIS_H1B_Employer_Hub** | 15 | H-1B employer-level data (FY2010-2023, discontinued) |
+| **BLS** | 8 | Bureau of Labor Statistics employment data (CES API snapshots thru Apr 2026) |
 | **Codebooks** | 3 | **NEW** - Static reference CSVs (SOC, countries, EB codes) |
 | **BLS_OEWS** | 3 | **NEW** - OEWS wage data (2023-2024) |
 | **WARN** | 2 | Worker Adjustment and Retraining Notification data (CA, TX) |
 | **DOS_Numerical_Limits** | 1 | **NEW** - Annual visa numerical limits (FY2025 only) |
 | **DHS_Yearbook** | 1 | DHS Yearbook of Immigration Statistics |
 | **ACS** | 1 | American Community Survey data |
-| **DOS_Waiting_List** | 2 | **NEW** - DOS waiting list (2023: PDF + CSV) |
+| **DOS_Waiting_List** | 2 | DOS Annual Report of Immigrant Visa Applicants (FY2023 only: PDF + CSV) |
 
 ---
 
@@ -85,10 +85,12 @@ downloads/ (1,226 files across 207 folders)
 │   └── FY2025/ (1 file)
 │       └── Annual_Numerical_Limits_FY2025.pdf
 │
-├── DOS_Waiting_List/ (2 files) **NEW**
+├── DOS_Waiting_List/ (2 files) 
 │   └── 2023/ (2 files)
-│       ├── waiting_list_2023.pdf (230 KB - Annual backlog snapshot)
+│       ├── waiting_list_2023.pdf (230 KB - "Annual Report of Immigrant Visa Applicants")
 │       └── waiting_list_2023.csv (Parsed: fiscal_year, category, country, count)
+│       NOTE: Only FY2023 has a published waiting list report. Table XIII (in
+│             Visa_Annual_Reports/) is visa issuances, NOT waiting list data.
 │
 ├── LCA/ (217 files in 46 folders)
 │   │

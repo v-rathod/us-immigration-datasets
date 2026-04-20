@@ -324,9 +324,9 @@ sources:
     cadence: "annual"
     method: "dos_waiting_list"
     base_url: "https://travel.state.gov"
-    start_year: 2015
+    start_year: 2023
     filetype: "pdf"
-    notes: "Waiting list reports by year (direct PDF download + parsed CSV with columns: fiscal_year, category, country, count)"
+    notes: "Annual Report of Immigrant Visa Applicants (backlog snapshot as of Nov 1). Only FY2023 available as standalone PDF (WaitingListItem_2023_vF.pdf). NOT Table XIII (which is visa issuances, not waiting list). DOS may publish FY2024+ in the future."
 
   # ========== DOL Record Layouts (NEW) ==========
   - name: "DOL OFLC Record Layouts"

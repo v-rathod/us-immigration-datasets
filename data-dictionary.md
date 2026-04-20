@@ -1,7 +1,7 @@
 # DATA_DICTIONARY.md
 
 **Repository:** `fetch-immigration-data`  
-**Last updated:** 2026‑02‑20
+**Last updated:** 2026-04-19
 
 This document describes every dataset downloaded into this project: the **purpose**, **what files contain**, **key fields to extract**, **how they join** with other datasets, the **update cadence**, and **caveats**.  
 This dictionary is the functional contract for Project 2 (model‑builder) and Project 3 (public app).
@@ -70,18 +70,22 @@ Files:
 
 ## 3) DOS Annual Immigrant Visa Waiting List
 
-**Path**: `downloads/DOS_Waiting_List/` (2023 PDF + CSV)  
-**Purpose**: As‑of‑Nov‑1 **backlog snapshot** by category/country; calibrates model priors for queue size.
+**Path**: `downloads/DOS_Waiting_List/` (FY2023 only)  
+**Purpose**: As-of-Nov-1 **backlog snapshot** by category/country; calibrates model priors for queue size.  
+**Last updated**: April 19, 2026 (confirmed only FY2023 publicly available)
 
 **Key fields**
 - `fiscal_year`  
-- `category`  
+- `category` (F1..F4, EB1..EB5)  
 - `country`  
-- `count`
+- `count` (count_waiting)
 
-**Joins**: `category` ↔ EB codebook; `country` ↔ ISO codebook  
+**Joins**: `category` -> EB codebook; `country` -> ISO codebook  
 **Cadence**: Annual  
-**Caveats**: URL patterns vary; store raw PDF and derived CSV with provenance.
+**Caveats**:
+- Only FY2023 report exists as a standalone PDF (`WaitingListItem_2023_vF.pdf`). DOS may publish FY2024+ in the future.
+- Do NOT confuse with Table XIII from Annual Reports, which is "Immigrant Visas Issued at Foreign Service Posts" (visa issuance data, not waiting list data). Table XIII is handled by `build_fact_visa_applications.py`.
+- The report contains both worldwide totals by category (chart tables on pages 2-3) and per-country breakdowns (text tables on pages 5-15).
 
 ---
 
@@ -258,7 +262,48 @@ Files:
 
 ---
 
-# Warehouse Targets (high‑level)
+## 15) BLS CES (Current Employment Statistics)
+
+**Path**: `downloads/BLS/` (JSON snapshots, Feb-Apr 2026)  
+**Purpose**: Total nonfarm employment and industry breakdowns; contextual indicator for labor market conditions.  
+**Last updated**: April 19, 2026 (`bls_ces_20260419.json`, data through Mar 2026)
+
+**Key fields**
+- `series_id` (e.g., CES0000000001 = Total Nonfarm)  
+- `year`, `period` (month)  
+- `value` (employment level, in thousands)
+
+**Joins**: None (contextual; aggregated at national level)  
+**Cadence**: Monthly (fetched on demand via BLS API v2)
+
+**Caveats**: 
+- BLS API requires registration key for higher rate limits.
+- Each JSON file is a snapshot; keep all snapshots for lineage.
+- Series can be revised in subsequent months.
+
+---
+
+## 16) WARN Act Notices
+
+**Path**: `downloads/WARN/` (CA + TX only)  
+**Purpose**: Layoff/plant closure notices; contextual signal for employer risk assessment.  
+**Last updated**: February 2026
+
+**Key fields** (vary by state)
+- `company_name`  
+- `location` (city, state)  
+- `layoff_date` or `notice_date`  
+- `employees_affected`  
+- `layoff_type` (closure, layoff, relocation)
+
+**Joins**: `company_name` -> employer normalization (fuzzy match)  
+**Cadence**: Ongoing (state-level reporting)
+
+**Caveats**: Only CA and TX data available. Coverage is very sparse. WARN data is supplementary only - do not use as primary signal.
+
+---
+
+# Warehouse Targets (high-level)
 
 You will normalize the above into (suggested):
 - `dim_time`, `dim_country`, `dim_visa_class`, `dim_soc`, `dim_area`, `dim_employer`

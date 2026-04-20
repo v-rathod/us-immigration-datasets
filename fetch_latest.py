@@ -2536,67 +2536,71 @@ def handle_dos_waiting_list(
     manifest: Dict[str, Any] = None
 ) -> None:
     """
-    Download DOS Immigrant Visa Waiting List reports using correct URL patterns.
-    
+    Download DOS "Annual Report of Immigrant Visa Applicants" waiting list PDFs.
+
+    This report contains the number of applicants registered in each
+    preference category as of November 1 of each fiscal year.
+
+    IMPORTANT: Do NOT confuse with Table XIII from Annual Reports, which is
+    "Immigrant Visas Issued at Foreign Service Posts" (visa issuances data,
+    not waiting list data). Table XIII is handled by build_fact_visa_applications.
+
+    Currently only FY2023 is available as a standalone PDF at:
+      travel.state.gov/.../WaitingList/WaitingListItem_2023_vF.pdf
+    DOS may publish additional years in the future.
+
     Args:
         source: Source configuration
         run_date: Current run date
-        group_dir: Group directory
+        group_dir: Group directory (downloads/DOS_Waiting_List)
         manifest_entries: List to append manifest entries
         manifest: Existing manifest for incremental downloads
     """
     log(f"Fetching DOS Immigrant Visa Waiting List...")
-    
+
     base_url = source.get("base_url", "https://travel.state.gov")
-    start_year = source.get("start_year", 2015)
+    start_year = source.get("start_year", 2023)
     end_year = run_date.year
-    
+
     downloaded = 0
-    
-    # Try multiple URL patterns (DOS has changed naming conventions over time)
-    url_patterns = [
-        # Pattern 1: Current format (as of 2023)
+
+    # Standalone waiting-list PDF URL patterns
+    # Only FY2023 (WaitingListItem_2023_vF.pdf) is confirmed to exist.
+    # Try multiple naming conventions in case DOS publishes future years.
+    standalone_patterns = [
         lambda y: f"{base_url}/content/dam/visas/Statistics/Immigrant-Statistics/WaitingList/WaitingListItem_{y}_vF.pdf",
-        # Pattern 2: Alternative naming
-        lambda y: f"{base_url}/content/dam/visas/Statistics/WaitingList/WaitingList_{y}.pdf",
-        # Pattern 3: With "AnnualReport" prefix
-        lambda y: f"{base_url}/content/dam/visas/Statistics/WaitingList/AnnualReport_{y}.pdf",
+        lambda y: f"{base_url}/content/dam/visas/Statistics/Immigrant-Statistics/WaitingList/WaitingListItem_{y}.pdf",
+        lambda y: f"{base_url}/content/dam/visas/Statistics/Immigrant-Statistics/WaitingList/WaitingListItem_FY{y}.pdf",
     ]
-    
+
     for year in range(start_year, end_year + 1):
         year_dir = group_dir / str(year)
         year_dir.mkdir(parents=True, exist_ok=True)
-        
+
         pdf_filename = f"waiting_list_{year}.pdf"
         pdf_path = year_dir / pdf_filename
-        
-        # Check if already have this file
-        pdf_downloaded = False
-        for pattern_idx, url_pattern in enumerate(url_patterns):
-            pdf_url = url_pattern(year)
-            
-            if manifest and is_file_in_manifest(pdf_url, pdf_path, manifest):
+
+        # Skip if we already have data for this year
+        if pdf_path.exists() and pdf_path.stat().st_size > 1000:
+            csv_filename = f"waiting_list_{year}.csv"
+            csv_path = year_dir / csv_filename
+            if not csv_path.exists():
+                log(f"Parsing existing PDF for {year}...")
+                _parse_waiting_list_pdf(pdf_path, csv_path, year)
+            else:
                 log(f"Already have {year}/{pdf_filename}, skipping")
-                # Still try to parse if CSV doesn't exist
-                csv_filename = f"waiting_list_{year}.csv"
-                csv_path = year_dir / csv_filename
-                if not csv_path.exists() and pdf_path.exists():
-                    log(f"Parsing existing PDF for {year}...")
-                    _parse_waiting_list_pdf(pdf_path, csv_path, year)
-                pdf_downloaded = True
-                break
-            
-            # Only try download if not already in manifest
-            if pdf_downloaded:
-                break
-                
-            # Try this URL pattern (suppress log spam for 404s)
+            continue
+
+        pdf_downloaded = False
+
+        # Try standalone waiting list PDF URL patterns
+        for pattern_idx, url_pattern in enumerate(standalone_patterns):
+            pdf_url = url_pattern(year)
             if download_file(pdf_url, pdf_path, silent_404=True):
                 log(f"Downloaded {year}: {pdf_filename} (pattern {pattern_idx + 1})", "success")
                 downloaded += 1
                 pdf_downloaded = True
-                
-                # Update manifest for PDF
+
                 entry = {
                     "group": source["group"],
                     "name": source["name"],
@@ -2608,40 +2612,32 @@ def handle_dos_waiting_list(
                     "hash": hash_file(pdf_path)
                 }
                 manifest_entries.append(entry)
-                
                 if manifest:
                     manifest['files_by_url'][pdf_url] = entry
-                
-                # Parse PDF to CSV
-                csv_filename = f"waiting_list_{year}.csv"
-                csv_path = year_dir / csv_filename
-                
-                if _parse_waiting_list_pdf(pdf_path, csv_path, year):
-                    log(f"Created parsed CSV: {year}/{csv_filename}", "success")
-                    
-                    # Update manifest for CSV
-                    csv_entry = {
-                        "group": source["group"],
-                        "name": f"{source['name']} (parsed)",
-                        "source_url": pdf_url,
-                        "local_path": str(csv_path.relative_to(csv_path.parents[2])),
-                        "detected_date": None,
-                        "method": "parsed",
-                        "status": "success",
-                        "hash": hash_file(csv_path)
-                    }
-                    manifest_entries.append(csv_entry)
-                    
-                    if manifest:
-                        manifest['files_by_url'][f"{pdf_url}#csv"] = csv_entry
-                
-                break  # Found working pattern, move to next year
-        
-        if not pdf_downloaded:
-            log(f"Couldn't find waiting list PDF for {year} (tried {len(url_patterns)} patterns)", "warning")
-        
+                break
+
+        # Parse PDF to CSV if we got the file
+        if pdf_downloaded:
+            csv_filename = f"waiting_list_{year}.csv"
+            csv_path = year_dir / csv_filename
+            if _parse_waiting_list_pdf(pdf_path, csv_path, year):
+                log(f"Created parsed CSV: {year}/{csv_filename}", "success")
+                csv_entry = {
+                    "group": source["group"],
+                    "name": f"{source['name']} (parsed)",
+                    "source_url": f"parsed:{pdf_filename}",
+                    "local_path": str(csv_path.relative_to(csv_path.parents[2])),
+                    "detected_date": None,
+                    "method": "parsed",
+                    "status": "success",
+                    "hash": hash_file(csv_path)
+                }
+                manifest_entries.append(csv_entry)
+        else:
+            log(f"No waiting list report found for FY{year} (report may not be published yet)", "warning")
+
         time.sleep(0.5)
-    
+
     log(f"Downloaded {downloaded} new file(s)")
 
 
