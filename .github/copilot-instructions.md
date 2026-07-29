@@ -196,6 +196,45 @@ source .venv/bin/activate
 - PyPDF2 parsing: fiscal_year, category, country, count
 - Yearly reports, 2023 confirmed working
 
+## ⚠️ DOS / travel.state.gov is behind Cloudflare (since ~mid-2026)
+
+**Symptom:** `fetch_latest.py` returns `403 Forbidden` or a "Just a moment..." /
+"Sorry, you have been blocked" HTML page for ANY travel.state.gov URL (Visa
+Bulletin, Visa Statistics, Waiting List, Numerical Limits). This is NOT a bug and
+NOT a missing file — it is Cloudflare bot management. Do not waste time retrying
+plain `requests`, adding headers, or using headless Selenium; all are blocked.
+
+**Two layers must be defeated:**
+1. **JS/managed challenge** → needs a REAL, VISIBLE browser to earn the
+   `cf_clearance` cookie. Headless Chrome (even undetected) gets stuck on
+   "Just a moment...".
+2. **TLS fingerprint (JA3)** → even WITH valid `cf_clearance` cookies transferred
+   to `requests`, the download is 403'd because `requests`' TLS signature isn't a
+   real browser. So you MUST download from inside the browser.
+
+**Working solution → [`interactive_visa_bulletin.py`](../interactive_visa_bulletin.py):**
+- Opens a visible Chrome via `undetected-chromedriver` (pinned `version_main=150`
+  — match to the locally installed Chrome major version, bump as Chrome updates).
+- Polls up to 4 min for the human to pass the challenge (auto-clears in ~7-11s in
+  practice; issues `cf_clearance`).
+- Downloads each PDF with `driver.execute_async_script` running an in-browser
+  `fetch()` that returns bytes as base64 → Python decodes & saves. This passes
+  BOTH the challenge and the TLS check.
+- Registers new files in `downloads/_manifest.json`.
+
+**To fetch new months (future coding agents, DO THIS):**
+```bash
+source .venv/bin/activate
+python interactive_visa_bulletin.py    # solve the challenge in the window that opens
+```
+- Edit `TARGET_MONTHS` in the script to add new months (e.g. `"September2026"`).
+- Already-present files are skipped automatically; 404 = not published yet.
+- Same pattern extends to other Cloudflare-blocked DOS endpoints (Visa Statistics,
+  Waiting List, Numerical Limits) — reuse the visible-browser + in-browser-`fetch()`
+  approach; only the URL patterns differ.
+- If Chrome was updated, adjust `CHROME_VERSION_MAIN` in the script to the new
+  major version (check with `Google\ Chrome --version` or the browser About page).
+
 ## Quick Commands
 ```bash
 # Run downloader (incremental)
