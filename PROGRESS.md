@@ -5,6 +5,58 @@
 
 ---
 
+## 2026-07-29 - Milestone 2: Comprehensive Q2/Q3 Data Refresh
+
+### Why
+Three-month data gap since April 2026. Multiple high-priority sources now have fresh data published:
+1. **LCA & PERM** - FY2026 Q2 disclosure data released (July 2026)
+2. **USCIS Employment-Based** - FY2026 Q1 data + 4 monthly EB inventories (Feb-Apr 2026)
+3. **DHS Yearbook** - FY2024 complete yearbook released (June 2026)
+4. **DOL Record Layouts** - FY2026 record layouts for LCA/PERM published
+
+### New Files Downloaded
+
+| Group | Count | Files/Details |
+|-------|-------|---------------|
+| **LCA** | 6 | FY2026 Q2 Disclosure Data + Appendix A + Worksites + all record layouts |
+| **PERM** | 3 | FY2026 Q2 Disclosure Data + Record Layout + Selected Statistics |
+| **USCIS Immigration** | 24 | FY2026 Q1 (10 forms) + FY2025 Q4 (8 forms) + EB Inventory (Feb-Apr 2026, 4 files) |
+| **DHS Yearbook** | 4 | FY2024 Lawful Permanent Residents, Naturalizations, Nonimmigrants, Tables 8-11 |
+| **DOL Record Layouts** | 4 | FY2026 layouts for PERM (1) + LCA (3) |
+| **WARN (CA)** | 1 | Current California WARN report |
+| **Other** | 3 | BLS OEWS, Codebooks, ACS (already present) |
+
+**Total New Files: ~41 files** (65 files transferred to manifest in batch processing)
+
+### Inventory After Update
+
+| Source | Coverage | Status |
+|--------|----------|--------|
+| **LCA** | FY2008-2026 Q2 | ✅ UP-TO-DATE (Q2 just published) |
+| **PERM** | FY2008-2026 Q2 | ✅ UP-TO-DATE (Q2 just published) |
+| **USCIS EB** | 1991-2026 Q1 + Monthly EB Inv | ✅ UP-TO-DATE |
+| **DHS Yearbook** | FY2024 | ✅ UP-TO-DATE (annual) |
+| **DOL Record Layouts** | Through FY2026 | ✅ UP-TO-DATE |
+| **Visa Bulletin** | May 2026 | ⏳ STALE (Jun-Jul 2026 expected) |
+| **Visa Statistics** | Sep 2025 | ⏳ STALE (Oct 2025-Jul 2026 expected) |
+| **BLS CES** | Mar 2026 | ⏳ STALE (Jul 2026 expected) |
+| **ACS** | 2025 (stub) | ⏳ MISSING (Sep 2026 expected) |
+
+### Downstream Impact for P2/P3
+- **`fact_lca_applications`** - 6 new quarters of H-1B data (FY2025 Q4 onward)
+- **`fact_perm_applications`** - 6 new quarters of PERM data (FY2025 Q4 onward)
+- **`fact_uscis_approvals`** - 10+ new EB form types for FY2026 Q1
+- **`fact_eb_inventory`** - 4 new monthly snapshots (Feb, Mar, Apr 2026)
+- **`fact_dhs_lpr`**, **`fact_dhs_naturalization`**, **`fact_dhs_nonimmigrant`** - FY2024 complete data
+- All downstream tables depending on LCA/PERM (wage metrics, PD trends, demand forecasts) will refresh
+
+### Archive Generated
+- **File:** `exports/latest_datasets_2026-07-29.zip`
+- **Size:** ~468 files bundled
+- **Purpose:** Full backup of all downloaded data for P2/P3 consumption
+
+---
+
 ## 2026-04-19 - Data Freshness Audit + Waiting List Fix + New Data Fetch
 
 ### Why

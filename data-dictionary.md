@@ -1,7 +1,7 @@
 # DATA_DICTIONARY.md
 
 **Repository:** `fetch-immigration-data`  
-**Last updated:** 2026-04-19
+**Last updated:** 2026-07-29 (Comprehensive Q2/Q3 refresh)
 
 This document describes every dataset downloaded into this project: the **purpose**, **what files contain**, **key fields to extract**, **how they join** with other datasets, the **update cadence**, and **caveats**.  
 This dictionary is the functional contract for Project 2 (model‑builder) and Project 3 (public app).
@@ -31,7 +31,7 @@ Files:
 
 **Path**: `downloads/Visa_Bulletin/` (monthly PDFs, 2011–May 2026)  
 **Purpose**: Monthly EB **cutoff dates** (Final Action & Dates for Filing) by category and chargeability; drives PD forecasting & retrogression risk.  
-**Last updated**: April 19, 2026 (May 2026 bulletin downloaded)
+**Last updated**: April 19, 2026 (May 2026 bulletin downloaded) — ⏳ Jun-Jul 2026 bulletins pending publication
 
 **Key fields to extract (normalized)**
 - `bulletin_year`, `bulletin_month`  
@@ -70,9 +70,9 @@ Files:
 
 ## 3) DOS Annual Immigrant Visa Waiting List
 
-**Path**: `downloads/DOS_Waiting_List/` (FY2023 only)  
+**Path**: `downloads/DOS_Waiting_List/` (FY2020-2023)  
 **Purpose**: As-of-Nov-1 **backlog snapshot** by category/country; calibrates model priors for queue size.  
-**Last updated**: April 19, 2026 (confirmed only FY2023 publicly available)
+**Last updated**: April 19, 2026 (FY2020-2023 data available; FY2024+ awaiting publication)
 
 **Key fields**
 - `fiscal_year`  
