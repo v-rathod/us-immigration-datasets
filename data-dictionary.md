@@ -29,9 +29,10 @@ Files:
 
 ## 1) Visa Bulletin
 
-**Path**: `downloads/Visa_Bulletin/` (monthly PDFs, 2011–May 2026)  
+**Path**: `downloads/Visa_Bulletin/` (monthly PDFs, 2011–August 2026)  
 **Purpose**: Monthly EB **cutoff dates** (Final Action & Dates for Filing) by category and chargeability; drives PD forecasting & retrogression risk.  
-**Last updated**: April 19, 2026 (May 2026 bulletin downloaded) — ⏳ Jun-Jul 2026 bulletins pending publication
+**Last updated**: July 29, 2026 (June/July/August 2026 bulletins downloaded)  
+**⚠ Access note**: travel.state.gov is behind **Cloudflare** (since ~mid-2026). Automated `requests`/headless scraping returns 403. Use `interactive_visa_bulletin.py` (visible browser + in-browser fetch) to download new bulletins.
 
 **Key fields to extract (normalized)**
 - `bulletin_year`, `bulletin_month`  

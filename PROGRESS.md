@@ -5,6 +5,56 @@
 
 ---
 
+## 2026-07-29 - Milestone 3: Cloudflare Block on DOS + Interactive Bulletin Bypass
+
+### Why
+travel.state.gov (DOS) deployed **Cloudflare bot-management protection** between April
+and July 2026. All automated access to the Visa Bulletin (and other DOS endpoints)
+now returns **403 Forbidden** or the "Just a moment..." JS challenge. This blocked
+the June/July/August 2026 bulletins from being fetched by `fetch_latest.py`.
+
+### What Was Tried (all blocked)
+| Approach | Result |
+|----------|--------|
+| Plain `requests` + basic headers | 403 Forbidden |
+| `requests` + full browser headers | 403 Forbidden |
+| Selenium headless + cookie transfer to `requests` | 403 (only `__cf_bm`, no `cf_clearance`) |
+| undetected-chromedriver headless | Stuck on "Just a moment..." |
+| **undetected-chromedriver (visible) + in-browser `fetch()`** | ✅ **WORKS** |
+
+### Root Cause & Solution
+- Cloudflare enforces **two** checks: (1) the JS/managed challenge (needs a real
+  browser to issue `cf_clearance`), and (2) **TLS fingerprinting (JA3)** — even with
+  valid cookies, `requests` is blocked because its TLS signature isn't a real browser.
+- **Fix**: download the PDF via `driver.execute_async_script` using in-browser
+  `fetch()`. This runs inside the authenticated browser (correct TLS fingerprint +
+  `cf_clearance` cookie), returns the bytes as base64, and Python saves them.
+- New standalone tool: **`interactive_visa_bulletin.py`** — opens a visible Chrome,
+  waits for the human to pass the Cloudflare challenge (auto-cleared in ~7-11s in
+  practice), then downloads all pending bulletins and registers them in the manifest.
+
+### New Files Downloaded
+| File | Size | Pages | Method |
+|------|------|-------|--------|
+| `Visa_Bulletin/2026/visabulletin_June2026.pdf` | 331 KB | 9 | Interactive bypass |
+| `Visa_Bulletin/2026/visabulletin_July2026.pdf` | 332 KB | 9 | Interactive bypass |
+| `Visa_Bulletin/2026/visabulletin_August2026.pdf` | 386 KB | 8 | Interactive bypass |
+
+**Visa Bulletin now current through August 2026.**
+
+### Operational Note
+- `fetch_latest.py` cannot solve the Cloudflare challenge in an unattended run
+  (it requires a real, visible browser). For DOS Cloudflare-protected sources, run
+  `python interactive_visa_bulletin.py` and pass the challenge when the window opens.
+- Other DOS endpoints (Waiting List, Numerical Limits, Visa Statistics) are behind
+  the same Cloudflare block; extend `TARGET_MONTHS`/URLs in the interactive script
+  to fetch those when needed.
+
+### Downstream Impact
+- P2 `fact_cutoffs` (Visa Bulletin) can refresh with Jun/Jul/Aug 2026 cutoff dates.
+
+---
+
 ## 2026-07-29 - Milestone 2: Comprehensive Q2/Q3 Data Refresh
 
 ### Why
