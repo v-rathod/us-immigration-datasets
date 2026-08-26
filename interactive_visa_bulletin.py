@@ -24,11 +24,71 @@ HUB_URL = "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulle
 PDF_BASE = "https://travel.state.gov/content/dam/visas/Bulletins/"
 YEAR_DIR = Path("downloads/Visa_Bulletin/2026")
 MANIFEST_PATH = Path("downloads/_manifest.json")
-CHROME_VERSION_MAIN = 150
+# Keep this None so undetected_chromedriver auto-matches installed Chrome.
+CHROME_VERSION_MAIN = None
 MAX_WAIT_SECONDS = 240  # up to 4 minutes for human to solve
 
 # Months to attempt (already-present files are skipped automatically)
-TARGET_MONTHS = ["June2026", "July2026", "August2026"]
+TARGET_MONTHS = ["September2026", "October2026"]
+
+
+def _wait_for_pdf_file(path: Path, timeout_seconds: int = 45) -> bool:
+    """Wait for a downloaded PDF file to appear and stabilize on disk."""
+    deadline = time.time() + timeout_seconds
+    last_size = -1
+    stable_count = 0
+
+    while time.time() < deadline:
+        if path.exists():
+            size = path.stat().st_size
+            if size > 0 and size == last_size:
+                stable_count += 1
+                if stable_count >= 2:
+                    return True
+            else:
+                stable_count = 0
+                last_size = size
+        time.sleep(1)
+    return path.exists() and path.stat().st_size > 0
+
+
+def _download_via_navigation(driver, url: str, dest: Path) -> bool:
+    """Fallback: open PDF URL in a new tab and let Chrome download it normally."""
+    original_handle = driver.current_window_handle
+    before_handles = set(driver.window_handles)
+
+    try:
+        driver.execute_script("window.open(arguments[0], '_blank');", url)
+
+        deadline = time.time() + 10
+        while time.time() < deadline:
+            after_handles = set(driver.window_handles)
+            diff = list(after_handles - before_handles)
+            if diff:
+                driver.switch_to.window(diff[0])
+                break
+            time.sleep(0.3)
+
+        # Give navigation a moment to trigger download before polling file.
+        time.sleep(2)
+        ok = _wait_for_pdf_file(dest, timeout_seconds=45)
+        if not ok:
+            return False
+
+        return dest.read_bytes()[:4] == b"%PDF"
+    finally:
+        # Close any extra tab(s) and restore the original tab.
+        for handle in list(driver.window_handles):
+            if handle != original_handle:
+                try:
+                    driver.switch_to.window(handle)
+                    driver.close()
+                except Exception:
+                    pass
+        try:
+            driver.switch_to.window(original_handle)
+        except Exception:
+            pass
 
 
 def wait_for_clearance(driver) -> bool:
@@ -111,6 +171,12 @@ def download_pdfs(driver) -> list:
             if status == 404:
                 print(f"    \u26a0 Not published yet (404): {filename}")
             else:
+                print(f"    \u26a0 Fetch blocked (status={status}). Trying browser-download fallback...")
+                if _download_via_navigation(driver, url, dest):
+                    size = dest.stat().st_size
+                    print(f"    \u2713 Saved {filename} ({size // 1024} KB) via navigation fallback")
+                    downloaded.append((month, filename, url, size))
+                    continue
                 print(f"    \u2717 Failed: status={status} {(result or {}).get('error', '')}")
             continue
 
@@ -169,8 +235,22 @@ def main() -> int:
         opts = uc.ChromeOptions()
         opts.add_argument("--no-sandbox")
         opts.add_argument("--disable-dev-shm-usage")
-        driver = uc.Chrome(options=opts, headless=False, use_subprocess=True,
-                           version_main=CHROME_VERSION_MAIN)
+        YEAR_DIR.mkdir(parents=True, exist_ok=True)
+        prefs = {
+            "download.default_directory": str(YEAR_DIR.resolve()),
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "plugins.always_open_pdf_externally": True,
+        }
+        opts.add_experimental_option("prefs", prefs)
+        chrome_kwargs = {
+            "options": opts,
+            "headless": False,
+            "use_subprocess": True,
+        }
+        if CHROME_VERSION_MAIN is not None:
+            chrome_kwargs["version_main"] = CHROME_VERSION_MAIN
+        driver = uc.Chrome(**chrome_kwargs)
         driver.set_page_load_timeout(90)
         driver.get(HUB_URL)
 
